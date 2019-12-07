@@ -1,0 +1,46 @@
+[{
+    "msgId" : "1111",
+    "userface" : "../../images/userface1.jpg",
+    "userName" : "小王",
+    "userAsk" : "马哥你好，请问你这个模版用的是什么框架啊�?",
+    "askTime" : "2017-05-27 12:50",
+    "msgReply" : [{
+        "userface" : "../../images/face.jpg",
+        "userName" : "请叫我马�?",
+        "userAsk" : "用的layui，贤心大神开发的前端框架",
+        "askTime" : "2017-05-27 13:50"
+    }]
+},{
+    "msgId" : "2222",
+    "userface" : "../../images/userface2.jpg",
+    "userName" : "小李",
+    "userAsk" : "马哥你好，请问你多大了？",
+    "askTime" : "2017-05-27 12:50",
+    "msgReply" : []
+},{
+    "msgId" : "3333",
+    "userface" : "../../images/userface3.jpg",
+    "userName" : "小赵",
+    "userAsk" : "马哥你好，请问你家是哪的�?",
+    "askTime" : "2017-05-27 12:50",
+    "msgReply" : []
+},{
+    "msgId" : "4444",
+    "userface" : "../../images/userface4.jpg",
+    "userName" : "小高",
+    "userAsk" : "马哥你好，请问你有没有女朋友啊？",
+    "askTime" : "2017-05-27 12:50",
+    "msgReply" : [{
+        "userface" : "../../images/face.jpg",
+        "userName" : "请叫我马�?",
+        "userAsk" : "这个貌似和技术无关吧，难道你想给我当老婆，呵呵�?��?��??",
+        "askTime" : "2017-05-27 13:50"
+    }]
+},{
+    "msgId" : "5555",
+    "userface" : "../../images/userface5.jpg",
+    "userName" : "小楚",
+    "userAsk" : "马哥你好，请问你�?个月工资多少啊？",
+    "askTime" : "2017-05-27 12:50",
+    "msgReply" : []
+}]

@@ -1,0 +1,56 @@
+[{
+	"title" : "学校管理",
+	"icon" : "icon-jianzhu_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "学校设置",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "school/index.shtml",
+			"spread" : false
+		},{
+			"title" : "人员设置",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "user/index.shtml",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "系统设置",
+	"icon" : "icon-quanjushezhi_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "角色管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "authority/index.shtml?type=1",
+			"spread" : false
+		},
+		{
+			"title" : "菜单管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "authority/menu_index.shtml",
+			"spread" : false,
+			"children" : [{
+				"title" : "菜单",
+				"icon" : "icon-jiantou_liebiaoxiangyou_o",
+				"href" : "authority/menu_list.shtml",
+				"spread" : false
+			},{
+				"title" : "第三级菜�?1",
+				"icon" : "icon-jiantou_liebiaoxiangyou_o",
+				"href" : "index.shtml",
+				"spread" : false
+			}]
+		},
+		{
+			"title" : "登录",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "page/login/login.shtml",
+			"spread" : false,
+			"target" : "_blank"
+		}
+	]
+}]

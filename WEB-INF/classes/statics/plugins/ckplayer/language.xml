@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<language>
+		<adCountdown>[$second]</adCountdown><!--广告播放结束倒计�?-->
+		<skipDelay>[$second]</skipDelay>
+		<buttonOver>
+			<play>点击播放</play>
+			<pause>暂停播放</pause>
+			<mute>静音</mute>
+			<escMute>恢复音量</escMute>
+			<full>全屏</full>
+			<escFull>�?出全�?</escFull>
+			<previousPage>上一�?</previousPage>
+			<nextPage>下一�?</nextPage>
+			<definition>点击选择清晰�?</definition>
+			<subtitle>选择字幕</subtitle>
+		</buttonOver>
+		<volumeSliderOver>
+			音量：[$volume]%
+		</volumeSliderOver>
+		<buffer>[$percentage]%</buffer>
+		<timeSliderOver><!--鼠标经过进度条显示的时间格式-->
+			[$timeh]:[$timei]:[$times]
+		</timeSliderOver>
+		<liveAndVod>
+			[$timeh]:[$timei]:[$times]
+		</liveAndVod>
+		<live>
+			直播�? [$liveTimeY]-[$liveTimem]-[$liveTimed] [$liveTimeh]:[$liveTimei]:[$liveTimes]
+		</live>
+		<m3u8Definition>
+			<name>流畅</name>
+			<name>低清</name>
+			<name>标清</name>
+			<name>高清</name>
+			<name>超清</name>
+			<name>蓝光</name>
+			<name>未知</name>
+		</m3u8Definition>
+		<error>
+			<cannotFindUrl>视频地址不存�?</cannotFindUrl>
+			<streamNotFound>加载失败</streamNotFound>
+			<formatError>视频格式错误</formatError>
+		</error>
+		<definition>自动</definition>
+		<subtitle>默认</subtitle>
+	</language>

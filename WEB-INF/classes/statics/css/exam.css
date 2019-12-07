@@ -1,0 +1,55 @@
+@charset "UTF-8";
+[class*=am-u-]{
+	padding-left: 0;
+	padding-right: 0;
+}
+
+a {
+	color:black;
+	
+}
+
+.am-list-date{
+	top:0.8rem;
+}
+
+.am-list-date button{
+	width: 54px;
+	height: 30px;
+	font-size: 1.3rem;
+	display: block;
+	margin-bottom: 5px;
+}
+
+.top-info{
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.top-info span{
+	color:#999;
+	font-size: 1.4rem;
+	margin-right: 10px;
+}
+
+.top-info .info{
+	
+}
+
+.am-list a{
+   color:#666;	
+}
+
+.page {
+	margin: 0 auto;
+}
+
+.am-pagination{
+	text-align: center;
+}
+
+.am-pagination>li>a, .am-pagination>li>span{
+	margin-bottom: 0;
+	margin-right: 1px;
+	font-size: 80%;
+}
