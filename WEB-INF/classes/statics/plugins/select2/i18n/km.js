@@ -1,3 +1,0 @@
-/*! Select2 4.0.3 | https://github.com/select2/select2/blob/master/LICENSE.md */
-
-(function(){if(jQuery&&jQuery.fn&&jQuery.fn.select2&&jQuery.fn.select2.amd)var e=jQuery.fn.select2.amd;return e.define("select2/i18n/km",[],function(){return{errorLoading:function(){return"មិនអាចទាញយ�?ទិន្នន័យ"},inputTooLong:function(e){var t=e.input.length-e.maximum,n="សូមលុបចេ�?  "+t+" អក្ស�?";return n},inputTooShort:function(e){var t=e.minimum-e.input.length,n="សូមបញ្ចូ�?"+t+" អក្ស�? រឺ ច្រើនជាងនេ�?";return n},loadingMore:function(){return"�?ំពុងទាញយ�?ទិន្នន័យបន្ថែម..."},maximumSelected:function(e){var t="អ្នកអាចជ្រើសរើសបានតែ "+e.maximum+" ជម្រើសប៉ុណ្ណោះ";return t},noResults:function(){return"មិនមានលទ្ធផល"},searching:function(){return"�?ំពុងស្វែងរ�?..."}}}),{define:e.define,require:e.require}})();
