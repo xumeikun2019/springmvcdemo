@@ -1,0 +1,8 @@
+package com.cf.project.service;
+
+public interface WxRequestService {
+	
+
+	Boolean sign(String user, String pwd, String openid) throws Exception; 
+
+}

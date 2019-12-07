@@ -1,0 +1,122 @@
+[{
+	"title" : "校园管理",
+	"icon" : "icon-shitujuzhen_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "校园简介",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "news/index.shtml?type=0",
+			"spread" : false
+		},{
+			"title" : "新闻动态",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "news/index.shtml?type=1",
+			"spread" : false
+		},{
+			"title" : "学生作品",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "news/index.shtml?type=3",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "班级管理",
+	"icon" : "icon-guizi_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "班级列表",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "classes/index.shtml",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "人员管理",
+	"icon" : "icon-qunzu_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "学生管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "student/index.shtml",
+			"spread" : false
+		},{
+			"title" : "教师管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "teacher/index.shtml",
+			"spread" : false
+		},{
+			"title" : "家长管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "parent/index.shtml",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "课程管理",
+	"icon" : "icon-tuwen_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "课表设置",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "course/index.shtml",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "通知",
+	"icon" : "icon-tongzhizhongxin_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "校园通知",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "notice/index.shtml?type=4",
+			"spread" : false
+		},{
+			"title" : "班级通知",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "notice/index.shtml?type=5",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "班牌管理",
+	"icon" : "icon-jianzhu_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "教室设置",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "classroom/index.shtml",
+			"spread" : false
+		},{
+			"title" : "设备管理",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "device/index.shtml",
+			"spread" : false
+		}
+	]
+},{
+	"title" : "卡路里消耗",
+	"icon" : "icon-jianzhu_o",
+	"href" : "",
+	"spread" : false,
+	"children" : [
+		{
+			"title" : "卡路里消耗",
+			"icon" : "icon-jiantou_liebiaoxiangyou_o",
+			"href" : "calorie/index.shtml",
+			"spread" : false
+		}
+	]
+}]

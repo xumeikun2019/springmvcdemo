@@ -1,0 +1,22 @@
+package com.cf.project.service;
+
+import com.cf.project.mybatis.model.CPlace;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import java.util.Map;
+
+public interface CPlaceService {
+    JsonListResult findCPlaceList(Map<String, Object> map) throws Exception;
+
+    CPlace findCPlaceListById(String id) throws Exception;
+
+    JsonResult saveOrUpdate(CPlace pojo) throws Exception;
+
+    JsonResult update(CPlace pojo) throws Exception;
+
+    JsonResult del(String id) throws Exception;
+
+	JsonResult findTreeList(Map<String, Object> map) throws Exception;
+
+	CPlace findSysDepartmentListById(String id) throws Exception;
+}

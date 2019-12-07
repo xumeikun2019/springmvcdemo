@@ -1,0 +1,26 @@
+.container{
+    padding: 0 20px;
+}
+
+.popup-content{
+    display: none;
+}
+
+.layui-upload-img {
+    width: 92px;
+    height: 92px;
+    margin: 0 10px 10px 0;
+}
+
+.exam-item img{
+	width: 160px;
+	height: 120px;
+}
+
+*+h1, *+h2, *+h3, *+h4, *+h5, *+h6 {
+	margin-top: 0;
+}
+
+.layui-form-select dl{
+	z-index: 1000;
+}

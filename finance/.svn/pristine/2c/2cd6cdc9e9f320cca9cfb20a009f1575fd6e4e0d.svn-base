@@ -1,0 +1,29 @@
+package com.cf.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.alibaba.fastjson.JSONObject;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+public interface WxRequestService {
+	
+
+	Boolean sign(String user, String pwd, String openid) throws Exception;
+
+	JsonResult findVisitByName(String user);
+
+	JsonResult updateVisitorStateById(String id, String state);
+
+	JsonListResult findCheckRecordByUidAndDate(String uid, String date) throws Exception;
+
+	JsonListResult findFaceImg(String openid) throws Exception;
+
+	JsonListResult findMeets(String date, String user);
+
+	Boolean saveOpenid(JSONObject jsonObject, String uname, String pwd) throws Exception;
+
+//	JsonResult updateVisitorStateFalseById(String id); 
+
+}

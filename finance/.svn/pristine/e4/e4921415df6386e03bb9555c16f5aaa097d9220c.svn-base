@@ -1,0 +1,142 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+    pageEncoding="utf-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>菜单管理</title>
+	<%@ include file="/common/taglibs.jsp"%>
+    <%@ include file="/common/table.jsp"%>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+</head>
+<body style="background: #eee;">
+   <div class="admin-main">
+
+           <div style="float: right;width: 100%;">
+
+               <div class="layui-card">
+                   <div class="layui-card-body">
+
+                       <div class="container">
+							<form class="layui-form" style="margin: 10px;">
+		
+		                   <div class="layui-form-item">
+		                       <label class="layui-form-label">上级菜单</label>
+		                       <div class="layui-input-block">
+						      <input type="checkbox" name="xq" title="星期一" value="1">
+						      <input type="checkbox" name="xq" title="星期二" value="2">
+						      <input type="checkbox" name="xq" title="星期三" value="3">
+						      <input type="checkbox" name="xq" title="星期四" value="4">
+						      <input type="checkbox" name="xq" title="星期五" value="5">
+						      <input type="checkbox" name="xq" title="星期六" value="6">
+						      <input type="checkbox" name="xq" title="星期日" value="7">
+						    </div>
+		                   </div>
+		
+		                   <div class="layui-form-item">
+		                       <label class="layui-form-label">时间段</label>
+		                       <div class="layui-input-block">
+		                           <div class="layui-inline">
+							        <input type="text" class="layui-input" id="startTime" placeholder="开始时间">
+							        至
+							        <input type="text" class="layui-input" id="endTime" placeholder="结束时间">
+							    </div>
+		                       </div>
+		                   </div>
+		
+		                   <%-- <div class="layui-form-item">
+		                       <label class="layui-form-label">排序</label>
+		                       <div class="layui-input-block">
+		                           <input type="number" id="sort" name="sort" lay-verify="required" autocomplete="off" placeholder="请输入排序编号" class="layui-input" value="${pojo.roleName}">
+		                       </div>
+		                   </div> --%>
+		
+		               </form>
+                       </div>
+
+                   </div>
+               </div>
+           </div>
+   </div>
+   <script>
+       layui.use(['form','jquery'], function(){
+           var form = layui.form
+               ,layer = layui.layer,
+               eleTree = layui.eleTree,
+               $ = layui.jquery;
+
+          
+
+           //自定义验证规则
+           form.verify({
+               categroy: function(value){
+                   if(value.length < 5){
+                       return '标题至少得5个字符啊';
+                   }
+               }
+           });
+           //监听提交
+           form.on('submit(menu-add)', function(data){
+               var url = '${ctx}/main/menu/save.do';
+               $.submit.post(data,url,function (data) {
+                   var result = data.result;
+                   if (result == 'ok') {
+                       layer.close(container);
+                       init();
+                   }
+               });
+               return false;
+           });
+           
+           form.on('submit(menu-edit)', function(data){
+               var url = '${ctx}/main/menu/save.do';
+               $.submit.post(data,url,function (data) {
+                   var result = data.result;
+                   if (result == 'ok') {
+                       init();
+                   }
+               });
+               return false;
+           });
+       });
+      $(function(){
+    	  
+    	  laydate.render({
+    		 elem: '#startTime'
+    	    ,type: 'time'
+   		    ,btns: ['clear', 'now','confirm']
+   		    ,trigger: 'click'
+    		});
+    	  
+    	  
+    	  laydate.render({
+    		 elem: '#endTime'
+    	    ,type: 'time'
+   		    ,btns: ['clear', 'now','confirm']
+   		    ,trigger: 'click'
+    		});
+
+      }) ;
+      
+      function getDates(){
+    	  obj = document.getElementsByName("xq");
+		    var dates_val = "";
+		    for(k in obj){
+		        if(obj[k].checked)
+		            dates_val+=obj[k].value+",";
+		    }
+        return dates_val;
+      }
+      function getTimes(){
+    	  return $('#startTime').val()+","+$('#endTime').val();
+      }
+      
+   </script>
+
+</body>
+</html>

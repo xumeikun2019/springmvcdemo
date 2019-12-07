@@ -1,0 +1,153 @@
+@charset "UTF-8";
+html, body .main > div  {
+	height: 100%;
+}
+
+.main {
+	height: 80%;
+}
+
+.am-g-fixed {
+	max-width: 1100px;
+} 
+
+[class*=am-u-]{
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.am-u-lg-9,.am-u-lg-6{
+	padding: 0;
+}
+
+.am-slider-default, .am-slider-default img{
+	max-height: 271px;
+	margin:0;
+}
+
+.am-slider-default .am-control-nav {
+	bottom: 10px;
+	text-align: right;
+} 
+
+.am-titlebar-default{
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.am-titlebar-default .am-titlebar-title{
+	color:#555;
+}
+
+
+.am-titlebar-default a{
+	color:gray;
+}
+
+.am-titlebar-default .am-titlebar-title:before {
+    border-left: 3px solid #588bc1;
+ }
+ 
+ .am-topbar-inverse{
+   background: #588bc1;
+ }
+
+a {
+	color:black;
+}
+
+label {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   display: block;
+   font-size: 14px;
+}
+
+.am-topbar{
+	margin-bottom: 0px;
+}
+
+.header {
+	background: #588bc1;
+}
+
+.header .header-info{
+	margin: 0 auto;
+	height: 100%;
+}
+
+.header .header-info .header-info-left label{
+	color: #fff67f;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+.header .header-info .header-info-right label{
+	color: white;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.header .header-info .header-info-left, .header .header-info .header-info-right{
+	height: 50%;
+}
+
+.header .header-info .header-info-right{
+	text-align: right;
+}
+
+ .footer {
+    position:fixed;
+    bottom:0;
+    background: #588bc1;
+    text-align: center;
+ }
+ 
+.footer .footer-info{
+	padding: 10px;
+}
+
+.footer .footer-info h5{
+    font-size: 90%;
+    margin: 5px;
+    color:white;
+}
+
+.footer .footer-info p{
+	font-size: 90%;
+	margin-top: 5px;
+}
+
+.am-topbar-right span {
+	margin-top: 11px;
+	display: block;
+	color: #fff67f;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+
+iframe {
+	margin:0;
+	padding:0;
+	width: 100%;
+	height:100%;
+}
+
+.am-btn-success{
+	background-color: #588bc1;
+	border-color:#588bc1;
+}
+
+.am-topbar-right b{
+	font-weight: 500;
+	display:block;
+	float:left;
+	margin-top:10px;
+}
+
+ul.am-dropdown-content>.am-active>a, ul.am-dropdown-content>.am-active>a:focus, ul.am-dropdown-content>.am-active>a:hover {
+	background: #588bc1;
+}

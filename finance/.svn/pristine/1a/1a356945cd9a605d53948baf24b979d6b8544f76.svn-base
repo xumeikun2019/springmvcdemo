@@ -1,0 +1,58 @@
+package com.cf.project.service;
+
+
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.project.mybatis.model.CMeetingVerify;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+import java.util.List;
+import java.util.Map;
+
+public interface CMeetingOrderService {
+    JsonListResult findCMeetingOrderList(Map<String, Object> map) throws Exception;
+
+    CMeetingOrder findCMeetingOrderListById(String id) throws Exception;
+
+    JsonResult saveOrUpdate(CMeetingOrder pojo) throws Exception;
+
+    JsonResult update(CMeetingOrder pojo) throws Exception;
+
+    JsonResult del(String id) throws Exception;	
+
+	JsonResult sptg(CMeetingOrder pojo, String string) throws Exception;
+
+	CMeetingOrder view(String id) throws Exception;
+
+	JsonResult qx(String id) throws Exception;
+
+	JsonResult spbtg(CMeetingVerify pojo, String string) throws Exception;
+
+	JsonResult findCdeviceCmeetingOrder(String dataTime, String deviceId) throws Exception;
+
+	JsonListResult cdeviceCplaceCmeetingOrder(Map<String, Object> map) throws Exception;
+
+	JsonResult updateByState(String id) throws Exception;
+
+	List<Map<String, Object>> findhytx(String userid, String sj);
+
+	List<Map<String, Object>> finddbsx(String userid);
+
+	JsonListResult findmoreCMeetingOrderList(Map<String, Object> map) throws Exception;
+
+	JsonListResult finddbsxmorelist(Map<String, Object> map) throws Exception;
+	/**
+	 * 会议签到情况查询
+	 * @param map
+	 * @return
+	 */
+	JsonListResult checkInList(Map<String, Object> map) throws Exception;
+	/**
+	 * 会议签到情况详细
+	 * @param map
+	 * @return
+	 */
+	JsonListResult checkInListDetailed(Map<String, Object> map) throws Exception;
+	//查询登录人员的角色是部门管理员、分公司领导、总公司领导还是中心领导
+	List<Map<String, Object>> findje(String string) throws Exception;
+}

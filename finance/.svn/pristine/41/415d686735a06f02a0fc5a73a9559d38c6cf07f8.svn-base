@@ -1,0 +1,73 @@
+.container{
+    padding: 50px 20px 0 20px;
+}
+
+.floor{
+	border-bottom-style:solid;
+	border-bottom-width: 5px;
+	border-bottom-color: #6bbbfa;
+	border-bottom-left-radius: 8px;
+}
+
+.floor .floor-label {
+	background:#6bbbfa;
+	padding:19px;
+	width:150px;
+	border-radius: 8px;
+	margin-bottom:-3px;
+	margin-left:-3px;
+	text-align: center;
+	float: left;
+}
+
+.floor .floor-label label {
+	color:white;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: 5px;
+}
+
+ .floor .rooms{
+ 	display: flex;
+ 	justify-content:flex-start;
+ }
+
+/*  .floor .rooms::-webkit-scrollbar {
+       display:none 
+ }
+  */
+
+.floor .rooms .meeting-room {
+	background: #c0e2fe;
+	width: 120px;
+	padding:15px;
+    border-radius:8px;
+    margin-left:30px;
+	text-align:center;
+	margin-top:5px;
+	margin-bottom: 2px;
+	/* float: left; */
+}
+
+.floor .rooms .meeting-room label {
+	width: 120px;
+	display: block;
+}
+
+.floor .rooms .online {
+	background: green;
+}
+
+
+.floor .rooms .offline {
+	background: red;
+}
+
+.layui-field-title{
+	margin:0;
+	margin-bottom: 10px;
+}
+
+.layui-elem-quote{
+	border-left:0;
+}

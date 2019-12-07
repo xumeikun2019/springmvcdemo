@@ -1,0 +1,147 @@
+package labor;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.cf.project.mybatis.dao.SysInfoMapper;
+import com.cf.util.ThreadContextHolder;
+
+import net.sf.json.JSONObject;
+import sun.misc.BASE64Encoder;
+
+public class add {
+
+	private String url = "";
+	//删除考勤设备上的单个人员信息
+	public String scdgry(String ip,String id){
+		PostMethod postmethod=null;
+		postmethod=new PostMethod("http://"+ip+":8090/person/delete");
+		postmethod.setParameter("pass", "12345678");
+		postmethod.setParameter("id", id);
+		String fcjoStr=httpPost(postmethod);
+		System.out.println(fcjoStr);
+		return fcjoStr;
+	}
+	//往考勤设备添加临时人员及卡号信息
+	public String tjlsry(String ip,String id,String name,String idcardNum){
+		PostMethod postmethod=null;
+		postmethod=new PostMethod("http://"+ip+":8090/person/create");
+		postmethod.setParameter("pass", "12345678");
+		String person="{\"id\":\""+id+"\",\"name\":\""+name+"\",\"idcardNum\":\""+idcardNum+"\"} ";
+		postmethod.setParameter("person", person);
+		String fcjoStr=httpPost(postmethod);
+		System.out.println(fcjoStr);
+		return fcjoStr;
+	}
+	//修改考勤设备上的人员信息
+		public String xgry(String ip,String id,String name,String idcardNum){
+				String person="{\"id\":\""+id+"\",\"name\":\""+name+"\",\"idcardNum\":\""+idcardNum+"\"} ";
+				PostMethod postmethod=new PostMethod("http://"+ip+":8090/person/update");
+				postmethod.setParameter("pass", "12345678");
+				postmethod.setParameter("person", person);
+				String fcjoStr=httpPost(postmethod);
+				System.out.println("11=="+fcjoStr);
+			return fcjoStr;
+		}
+    
+	//往考勤设备添加人员信息
+	public String tjry(String ip,String id,String name,String idcardNum){
+			String person="{\"id\":\""+id+"\",\"name\":\""+name+"\",\"idcardNum\":\""+idcardNum+"\"} ";
+			PostMethod postmethod=new PostMethod("http://"+ip+":8090/person/create");
+			postmethod.setParameter("pass", "12345678");
+			postmethod.setParameter("person", person);
+			String fcjoStr=httpPost(postmethod);
+			System.out.println("11=="+fcjoStr);
+		return fcjoStr;
+	}
+	//往考勤设备添加照片信息
+	public String tjryzp(String ip,String id,String path){
+		System.out.println("id===="+id);
+		PostMethod postmethod=new PostMethod("http://"+ip+":8090/face/create");
+		postmethod.setParameter("pass", "12345678");
+		postmethod.setParameter("personId", id);
+		postmethod.setParameter("faceId", "");
+		postmethod.setParameter("imgBase64", ftpbase64(this.getPhysicalPath()+"upload\\common\\"+path));
+		postmethod.setParameter("isEasyWay", "true");
+		String fcjoStr=httpPost(postmethod);
+		System.out.println("22=="+fcjoStr);
+		return fcjoStr;
+	}
+	//获取物理路径
+    private String getPhysicalPath() {
+    	HttpServletRequest request =ThreadContextHolder.getHttpRequest();
+        String servletPath = request.getServletPath();
+        String realPath = request.getSession().getServletContext()
+                .getRealPath("/");
+        return realPath;
+    }
+	
+	//将图片转为base64字符
+	public String ftpbase64(String file) {
+    	FileInputStream fin=null;
+        BufferedInputStream bin=null;
+        ByteArrayOutputStream baos=null;
+        BufferedOutputStream bout=null;
+        BASE64Encoder encoder = new BASE64Encoder();  
+        try{
+        	fin=new FileInputStream(file);
+            bin=new BufferedInputStream(fin);
+            baos=new ByteArrayOutputStream();
+            bout=new BufferedOutputStream(baos);
+            byte[] buffer=new byte[1024];
+            int len=bin.read(buffer);
+            while(len!=-1){
+                bout.write(buffer,0,len);
+                len=bin.read(buffer);
+            }
+            //读取完毕
+            bout.flush();
+            byte[] bytes = baos.toByteArray();
+            
+            return encoder.encodeBuffer(bytes).trim();  
+//            return res;
+        }catch (Exception e) {
+			// TODO: handle exception
+		}finally {
+			try{
+                fin.close();
+                bin.close();
+                bout.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
+
+		}
+         
+        return null;
+    }
+	
+	 private static String httpPost(PostMethod postMethod){	
+			String strRtn="";
+			try{			
+				HttpClient client =new HttpClient();
+				client.getParams().setContentCharset("UTF-8");
+				client.executeMethod(postMethod);
+				strRtn=postMethod.getResponseBodyAsString();
+			}catch(Exception e){
+				
+			}
+			return strRtn;
+		}
+
+}

@@ -1,0 +1,175 @@
+package com.cf.project.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.project.mybatis.dao.CMeetingOrderMapper;
+import com.cf.project.mybatis.dao.CMeetingSignMapper;
+import com.cf.project.mybatis.dao.CUserMapper;
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.project.mybatis.model.CMeetingSign;
+import com.cf.project.mybatis.model.CUser;
+import com.cf.project.service.CMeetingSignService;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.EntyPage;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+@Service
+public class CMeetingSignServiceImpl implements CMeetingSignService {
+	@Autowired
+	private CMeetingSignMapper cMeetingSignMapper;
+	@Autowired
+	private CUserMapper cUserMapper;
+	@Autowired
+	private CMeetingOrderMapper cMeetingOrderMapper;
+
+	@Cache
+	public JsonListResult findCMeetingSignList(Map<String, Object> map) throws Exception {
+		List<Map<String, Object>> list = cMeetingSignMapper.findByHDPage(map);
+		EntyPage page = (EntyPage) map.get("page");
+		JsonListResult jsonResult = new JsonListResult(page, list);
+		return jsonResult;
+	}
+
+	@Cache
+	public CMeetingSign findCMeetingSignListById(String id) throws Exception {
+		return this.cMeetingSignMapper.selectByPrimaryKey(id);
+	}
+
+	@CacheClear
+	public JsonResult saveOrUpdate(CMeetingSign pojo) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		if (pojo != null) {
+			String id = pojo.getId();
+			int result = 0;
+			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+			if (StringUtils.isNotBlank(id)) {
+				pojo.setLastTime(dateTime);
+				result = cMeetingSignMapper.updateByPrimaryKeySelective(pojo);
+			} else {
+				pojo.setAddTime(dateTime);
+				pojo.setLastTime(dateTime);
+				result = cMeetingSignMapper.insertSelective(pojo);
+			}
+			if (result == 0) {
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+			}
+		}
+		return jsonResult;
+	}
+
+	@CacheClear
+	public JsonResult update(CMeetingSign pojo) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+		pojo.setLastTime(dateTime);
+		int result = cMeetingSignMapper.updateByPrimaryKeySelective(pojo);
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	@CacheClear
+	public JsonResult del(String id) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		int result = 0;
+		if (StringUtils.contains(id, ",")) {
+			String[] idsArr = id.split(",");
+			if (idsArr.length > 0) {
+				for (String idArr : idsArr) {
+					result = cMeetingSignMapper.deleteByPrimaryKey(idArr);
+					if (result == 0) {
+						break;
+					}
+				}
+			}
+		} else {
+			result = cMeetingSignMapper.deleteByPrimaryKey(id);
+		}
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	/**
+	 * 签到
+	 * 
+	 * @throws Exception
+	 */
+	@CacheClear
+	public JsonResult addCmeetingSign(String wechatId, String meetingId) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		// 根据wechatId查询用户
+		CUser user = cUserMapper.findcUserServiceByWechatId(wechatId);
+		if (user == null) {
+			jsonResult.setMessage("签到失败");
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+		CMeetingOrder cmeetingOrder = cMeetingOrderMapper.findMeetingNameById(meetingId);
+
+		// 获取会议的开始结束时间
+		String timeStart = cmeetingOrder.getTimeStart();
+		String timeEnd = cmeetingOrder.getTimeEnd();
+		// 获取当前系统时间
+		long CurrDateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss")
+				.getTime();
+		// 时间格式解析
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		long starTtime = dateFormat.parse(timeStart).getTime();
+		long endTtime = dateFormat.parse(timeEnd).getTime();
+		// 当前时间和会议时间比较
+		if (CurrDateTime > endTtime) {
+			jsonResult.setMessage("会议已结束");
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+		String userId = user.getId();
+		int num = cMeetingSignMapper.findCmeetingSignByUserId(userId, meetingId);
+		if (num > 0) {
+			jsonResult.setMessage("不能重复签到");
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+		// 插入签到表
+		CMeetingSign cMeetingSign = new CMeetingSign();
+		cMeetingSign.setMeetingId(meetingId);
+		cMeetingSign.setUserId(userId);
+		cMeetingSign.setState("T");
+		Date addTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+		cMeetingSign.setAddTime(addTime);
+		int flag = cMeetingSignMapper.insertSelective(cMeetingSign);
+		if (flag == 0) {
+			jsonResult.setMessage("签到失败");
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+		jsonResult.setData(cmeetingOrder.getMeetingName());
+		jsonResult.setMessage("签到成功");
+		return jsonResult;
+	}
+
+	@Cache
+	public JsonListResult findCmeetingSignList() {
+		JsonListResult jsonListResult = new JsonListResult();
+		List<Map<String, Object>> list = cMeetingSignMapper.findCmeetingSignList();
+		if (list.isEmpty()) {
+			jsonListResult.setResult("无相关信息");
+			jsonListResult.setResult(Constants.OPERATION_FAIL);
+		}
+		jsonListResult.setList(list);
+		return jsonListResult;
+	}
+}

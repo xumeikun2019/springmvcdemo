@@ -1,0 +1,396 @@
+package com.cf.project.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.project.mybatis.dao.CPlaceMapper;
+import com.cf.project.mybatis.dao.CRoomDeptMapper;
+import com.cf.project.mybatis.model.CPlace;
+import com.cf.project.mybatis.model.CRoomDept;
+import com.cf.project.mybatis.model.CRoomDeptExample;
+import com.cf.project.mybatis.model.CRoomDeptExample.Criteria;
+import com.cf.project.service.CPlaceService;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.EntyPage;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+@Service
+public class CPlaceServiceImpl implements CPlaceService {
+	@Autowired
+	private CPlaceMapper cPlaceMapper;
+	@Autowired
+	private CRoomDeptMapper cRoomDeptMapper;
+
+	@Cache
+	public JsonListResult findCPlaceList(Map<String, Object> map) throws Exception {
+		List<Map<String, Object>> list = cPlaceMapper.findByHDPage(map);
+		EntyPage page = (EntyPage) map.get("page");
+		JsonListResult jsonResult = new JsonListResult(page, list);
+		return jsonResult;
+	}
+
+	@Override
+	public JsonResult findCPlaceCDeviceListByParentId(Map<String, Object> map) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		List<Map<String, Object>> floorList = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> placeList = cPlaceMapper.findPlaceList(map);
+		if (!placeList.isEmpty()) {
+			for (Map<String, Object> place : placeList) {
+				int level = (Integer) place.get("level");
+				String id = (String) place.get("id");
+				String name = (String) place.get("name");
+				List<Map<String, Object>> meetingRoomList = new ArrayList<Map<String, Object>>();
+				if (level == 2) { // 楼层
+					for (Map<String, Object> room : placeList) {
+						String online = "";
+						String mac = (String) room.get("mac");
+						String parentId = (String) room.get("parent_id");
+						Date lastTime = (Date) room.get("last_time");
+						Date now = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(),
+								"yyyy-MM-dd HH:mm:ss");
+						if (lastTime != null) {
+							long between = now.getTime() - lastTime.getTime();
+							long second = between / 1000;
+							if (second <= 60) {
+								online = "online";
+							} else {
+								online = "offline";
+							}
+						}
+						if (StringUtils.isBlank(mac)) {
+							online = "";
+						}
+						room.put("online", online);
+
+						if (StringUtils.equals(id, parentId)) {
+							meetingRoomList.add(room);
+						}
+					}
+					Map<String, Object> floorMap = new HashMap<String, Object>();
+					floorMap.put("id", id);
+					floorMap.put("name", name);
+					floorMap.put("list", meetingRoomList);
+					floorList.add(floorMap);
+
+				}
+			}
+		}
+		jsonResult.setData(floorList);
+		return jsonResult;
+	}
+
+	@Cache
+	@Override
+	public JsonResult findCPlaceCroomDeptCMeetingOrderListByDeptId(Map<String, Object> map) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		List<Map<String, Object>> roomList = Collections.emptyList();
+		List<Map<String, Object>> roomMeetingList = new ArrayList<Map<String, Object>>();
+		int deptCount = cPlaceMapper.findRoomDeptCount(map);
+		if (deptCount == 0) {
+			roomList = cPlaceMapper.findMeetingRoomList();
+		} else {
+			roomList = cPlaceMapper.findMeetingRoomByDeptId(map);
+		}
+
+		if (!roomList.isEmpty()) {
+			List<Map<String, Object>> meetingAllList = cPlaceMapper.findMeetingByAllRoom(map);
+			for (Map<String, Object> roomMap : roomList) {
+				List<Map<String, Object>> meetingList = new ArrayList<Map<String, Object>>();
+				String id = (String) roomMap.get("id");
+				String name = (String) roomMap.get("pname");
+				String verify = (String) roomMap.get("verify");
+				Map<String, Object> meetingRoomMap = new HashMap<String, Object>();
+				meetingRoomMap.put("id", id);
+				meetingRoomMap.put("name", name);
+				meetingRoomMap.put("verify", verify);
+
+				for (Map<String, Object> meetingMap : meetingAllList) {
+					String meetingId = (String) meetingMap.get("id");
+					if (StringUtils.equals(id, meetingId)) {
+						meetingList.add(meetingMap);
+					}
+				}
+
+				meetingRoomMap.put("list", meetingList);
+
+				roomMeetingList.add(meetingRoomMap);
+			}
+		}
+		String date = DateTimeUtil.getCurrDateStr();
+		jsonResult.setData(roomMeetingList);
+		jsonResult.setMessage(date);
+		return jsonResult;
+	}
+
+	@Override
+	public JsonResult findCPlaceCDeviceListByTypeParentId(Map<String, Object> map) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		List<Map<String, Object>> floorList = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> placeList = cPlaceMapper.findFloorsList(map);
+		List<Map<String, Object>> floorDeviceList = cPlaceMapper.findFloorList(map);
+		if (!placeList.isEmpty()) {
+			for (Map<String, Object> place : placeList) {
+				String id = (String) place.get("id");
+				String name = (String) place.get("name");
+				List<Map<String, Object>> deviceList = new ArrayList<Map<String, Object>>();
+
+				for (Map<String, Object> room : floorDeviceList) {
+					String online = "";
+					String ip = (String) room.get("ip");
+					String placeId = (String) room.get("place_id");
+					if (StringUtils.equals(id, placeId)) {
+
+						Date lastTime = (Date) room.get("last_time");
+						Date now = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(),
+								"yyyy-MM-dd HH:mm:ss");
+						if (lastTime != null) {
+							long between = now.getTime() - lastTime.getTime();
+							long second = between / 1000;
+							if (second <= 60) {
+								online = "online";
+							} else {
+								online = "offline";
+							}
+						}
+						if (StringUtils.isBlank(ip)) {
+							online = "";
+						}
+						room.put("online", online);
+						deviceList.add(room);
+					}
+
+				}
+				Map<String, Object> floorMap = new HashMap<String, Object>();
+				floorMap.put("id", id);
+				floorMap.put("name", name);
+				floorMap.put("list", deviceList);
+				floorList.add(floorMap);
+
+			}
+		}
+		jsonResult.setData(floorList);
+		return jsonResult;
+	}
+
+	@Cache
+	public CPlace findCPlaceListById(String id) throws Exception {
+		return this.cPlaceMapper.selectByPrimaryKey(id);
+	}
+
+	@CacheClear
+	public JsonResult saveOrUpdate(CPlace pojo) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		if (pojo != null) {
+			String id = pojo.getId();
+			int result = 0;
+			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+			if (StringUtils.isNotBlank(id)) {
+				// 删除
+				CRoomDeptExample example = new CRoomDeptExample();
+				Criteria createCriteria = example.createCriteria();
+				createCriteria.andPlaceIdEqualTo(id);
+				int flag = cRoomDeptMapper.deleteByExample(example);
+				// 添加
+				String orderDeptId = pojo.getOrderDeptId();
+				if (!StringUtils.isEmpty(orderDeptId)) {
+					String[] orderDeptIds = orderDeptId.split(",");
+					for (String orderDept : orderDeptIds) {
+						CRoomDept cRoomDept = new CRoomDept();
+						cRoomDept.setPlaceId(id);
+						cRoomDept.setDeptId(orderDept);
+						cRoomDeptMapper.insertSelective(cRoomDept);
+					}
+				}
+				pojo.setLastTime(dateTime);
+				result = cPlaceMapper.updateByPrimaryKeySelective(pojo);
+			} else {
+				pojo.setAddTime(dateTime);
+				pojo.setLastTime(dateTime);
+				CPlace parent = cPlaceMapper.selectByPrimaryKey(pojo.getParentId());
+				Integer level = parent.getLevel();
+				if (level > 3) {
+					jsonResult.setResult(Constants.OPERATION_FAIL);
+					jsonResult.setMessage("无法继续添加");
+				} else {
+					String orderDeptId = pojo.getOrderDeptId();
+
+					if (!StringUtils.isEmpty(orderDeptId)) {
+						String[] orderDeptIds = orderDeptId.split(",");
+						String deptId = pojo.getId();
+						for (String orderDept : orderDeptIds) {
+							CRoomDept cRoomDept = new CRoomDept();
+							cRoomDept.setPlaceId(deptId);
+							cRoomDept.setDeptId(orderDept);
+							cRoomDeptMapper.insertSelective(cRoomDept);
+						}
+					}
+					result = cPlaceMapper.insertSelective(pojo);
+				}
+			}
+			if (result == 0) {
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+			}
+		}
+		return jsonResult;
+	}
+
+	@CacheClear
+	public JsonResult update(CPlace pojo) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+		pojo.setLastTime(dateTime);
+		int result = cPlaceMapper.updateByPrimaryKeySelective(pojo);
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	@CacheClear
+	public JsonResult del(String id) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		int result = 0;
+		if (StringUtils.contains(id, ",")) {
+			String[] idsArr = id.split(",");
+			if (idsArr.length > 0) {
+				for (String idArr : idsArr) {
+					result = cPlaceMapper.deleteByPrimaryKey(idArr);
+					if (result == 0) {
+						break;
+					}
+				}
+			}
+		} else {
+
+			// 根据会议室删除对应的部门
+			CRoomDeptExample example = new CRoomDeptExample();
+			Criteria createCriteria = example.createCriteria();
+			createCriteria.andPlaceIdEqualTo(id);
+			int flag = cRoomDeptMapper.deleteByExample(example);
+			result = cPlaceMapper.deleteByPrimaryKey(id);
+		}
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	@Cache
+	public JsonResult findTreeList(Map<String, Object> map) throws Exception {
+		List<Map<String, Object>> list = cPlaceMapper.findTreeListByDepartment();
+		JsonResult jsonResult = new JsonResult();
+		jsonResult.setData(list);
+		return jsonResult;
+	}
+
+	@Cache
+	public CPlace findSysDepartmentListById(String id) throws Exception {
+		return this.cPlaceMapper.selectByPrimaryKey(id);
+	}
+
+	/**
+	 * 根据level或者parentId查询地点
+	 * 
+	 * @param map
+	 * @return
+	 */
+	@Cache
+	public JsonListResult findCplanceByParentIdORlevel(Map<String, Object> map) {
+		JsonListResult jsonListResult = new JsonListResult();
+		if (map != null) {
+			List<Map<String, Object>> placeList = cPlaceMapper.findCplanceByParentIdORlevel(map);
+			jsonListResult.setList(placeList);
+		}
+		return jsonListResult;
+	}
+
+	/**
+	 * 查询会议室
+	 */
+	@Cache
+	public List<Map<String, Object>> findAllCPlace() {
+
+		return cPlaceMapper.findAllCPlace();
+	}
+	/**
+	 * 查询员工所在楼层
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+    @Cache
+    public List<Map<String,Object>> findlc(String userid){
+    	List<Map<String,Object>> list = cPlaceMapper.findlc(userid);
+		return list;
+    }
+
+	/**
+	 * 查询所有楼层和会议室
+	 * @throws Exception 
+	 */
+	public JsonResult findFloorMeet() throws Exception{
+		JsonResult jsonResult = new JsonResult();
+		Map<String, Object> hashMap = new HashMap<String, Object>();
+		//查询所有楼层
+		List<Map<String, Object>> placeList = cPlaceMapper.findCPlace();
+		//根据当前时间查询所有会议室及会议内容
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Date date = new Date();
+		String currTime1 = format.format(date);
+		List<Map<String, Object>> meetingList = cPlaceMapper.findOrderAndMeeting(currTime1);
+		
+		if (placeList.isEmpty()) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+		//遍历楼层
+		for (Map<String, Object> placeMap : placeList) {
+			String floorId = (String) placeMap.get("id");
+			//遍历会议室及会议内容
+			for (Map<String, Object> meetingMap : meetingList) {
+				String pId = (String) meetingMap.get("parentId");
+				String placeId = (String) meetingMap.get("placeId");
+				if(floorId.equals(pId)) {
+					//获取当前系统时间
+					long currTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss").getTime();
+					
+					String timeStartStr = (String) meetingMap.get("timeStart");
+					String timeEndStr = (String) meetingMap.get("timeEnd");
+					
+					if(StringUtils.isEmpty(timeStartStr) && StringUtils.isEmpty(timeEndStr)) {
+						meetingMap.put("flag", "0");
+					}else {
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						long timeStart = dateFormat.parse(timeStartStr).getTime();
+						long timeEnd = dateFormat.parse(timeEndStr).getTime();
+						if(currTime>timeStart && currTime<timeEnd) {
+							String state = (String) meetingMap.get("state");
+							if(state.equals("E")) {
+								meetingMap.put("flag", "0");
+							}else {
+								meetingMap.put("flag", "1");
+							}
+						}
+					}
+				}
+			}
+		}
+		hashMap.put("placeList", placeList);
+		hashMap.put("meetingList", meetingList);
+		jsonResult.setData(hashMap);
+		return jsonResult;
+	}
+}

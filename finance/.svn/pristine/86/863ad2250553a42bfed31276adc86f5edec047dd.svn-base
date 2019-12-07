@@ -1,0 +1,685 @@
+package com.cf.project.controller;
+
+import com.cf.project.mybatis.dao.CAttendanceRecordMapper;
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.project.mybatis.model.CMeetingVerify;
+import com.cf.project.service.CAttendanceRecordService;
+import com.cf.project.service.CMeetingOrderService;
+import com.cf.project.service.ExcelManager;
+import com.cf.project.service.jihua.CJihuaService;
+import com.cf.project.Constants;
+import com.cf.project.controller.GridController;
+import com.cf.util.EntyPage;
+import com.cf.util.GridJsonResult;
+import com.cf.util.JsonResult;
+import com.cf.util.SessionUtil;
+
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/main/meetingOrder")
+public class CMeetingOrderController extends GridController {
+    @Autowired
+    private CMeetingOrderService cMeetingOrderService;
+    @Autowired
+    private CAttendanceRecordService cAttendanceRecordService;
+    @Autowired
+    private CAttendanceRecordMapper cAttendanceRecordMapper;
+    @Autowired
+    private ExcelManager excelManager;
+    @Autowired
+    private CJihuaService cjihuaService;
+
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/list")
+    public GridJsonResult listJson(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;		try {			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("nameId", usermap.get("id").toString());			List<Map<String,Object>> list = cMeetingOrderService.findCMeetingOrderList(map).getList();			result = new GridJsonResult(page);			result.setData(list);		} catch (Exception e) {			e.printStackTrace();		}		return result;
+    }
+    /**
+     * 本周会议室资源统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingList")
+    public GridJsonResult meetingList(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("nameId", usermap.get("id").toString());
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingList(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+    /**
+     * 下周会议室资源统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingListxz")
+    public GridJsonResult meetingListxz(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("nameId", usermap.get("id").toString());
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingListxz(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 查询领导
+     */
+    @ResponseBody
+    @RequestMapping(value= "/findld",method = RequestMethod.POST)
+    public JsonResult findld() {
+    	JsonResult result = new JsonResult();
+		try {
+			List<Map<String,Object>> list = cMeetingOrderService.findld();
+			result.setData(list);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 本周领导会议统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingListld")
+    public GridJsonResult meetingListld(@RequestParam Map<String, Object> map, EntyPage page,String userid) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			map.put("userid", userid);
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingListld(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 下周领导会议统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingListldxz")
+    public GridJsonResult meetingListldxz(@RequestParam Map<String, Object> map, EntyPage page,String userid) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			map.put("userid", userid);
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingListldxz(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+    /**
+     * 本周公司会议统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingGsList")
+    public GridJsonResult meetingGsList(@RequestParam Map<String, Object> map, EntyPage page,String userid) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			map.put("userid", userid);
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingGsList(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 下周公司会议统计
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/meetingGsListxz")
+    public GridJsonResult meetingGsListxz(@RequestParam Map<String, Object> map, EntyPage page,String userid) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			map.put("userid", userid);
+			List<Map<String,Object>> list = cMeetingOrderService.findmeetingGsListxz(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    //点击更多打开会议更多页面
+    @RequestMapping(value = "/hytxmore", method = RequestMethod.GET)
+    public String more() {
+    	return "main/meeting/hytxmore";
+    }
+    
+    @RequestMapping(value = "/dbsxmore", method = RequestMethod.GET)
+    public String dbsxmore() {
+    	return "main/meeting/dbsxmore";
+    }
+
+    @RequestMapping(value= "/add",method = RequestMethod.GET)
+    public String add(ModelMap model) {
+        return "main/meetingOrder/add";
+    }
+
+    @RequestMapping(value= "/edit",method = RequestMethod.GET)
+    public String edit(String id, ModelMap model) {
+        try {			CMeetingOrder pojo = cMeetingOrderService.findCMeetingOrderListById(id);			model.addAttribute("pojo",pojo);
+//			System.out.println("pojo=="+pojo.getOrderUserLxfs());		} catch (Exception e) {			e.printStackTrace();		}        return "main/meeting/approval";
+    }
+    
+    @RequestMapping(value= "/view",method = RequestMethod.GET)
+    public String view(String id, ModelMap model) {
+        try {
+			CMeetingOrder pojo = cMeetingOrderService.view(id);
+//			System.out.println("1111==="+pojo.getOrderUserLxfs());
+			model.addAttribute("pojo",pojo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "main/meeting/view";
+    }
+    
+    @RequestMapping(value= "/btgym",method = RequestMethod.GET)
+    public String btgym(ModelMap model,String id) {
+    	model.addAttribute("meetingid",id);
+        return "main/meeting/btgym";
+    }
+    /**
+     * 审批通过
+     * @param pojo
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value= "/sptg",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult sptg(@RequestBody CMeetingOrder pojo) {
+        JsonResult result = new JsonResult();
+		try {
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			 result = cMeetingOrderService.sptg(pojo, usermap.get("id").toString());
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 审批不通过
+     * @param pojo
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value= "/spbtg",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult spbtg(@RequestBody CMeetingVerify pojo) {
+        JsonResult result = new JsonResult();
+		try {
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			 result = cMeetingOrderService.spbtg(pojo, usermap.get("id").toString());
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/save",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult create(@RequestBody CMeetingOrder pojo) {
+        JsonResult result = new JsonResult();		try {			 result = cMeetingOrderService.saveOrUpdate(pojo);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+    /**
+     * 取消预约
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value= "/qx",method = RequestMethod.POST)
+    public JsonResult qx(String id) {
+        JsonResult result = new JsonResult();
+		try {
+			 result = cMeetingOrderService.qx(id);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/del",method = RequestMethod.POST)
+    public JsonResult del(String id) {
+        JsonResult result = new JsonResult();		try {			 result = cMeetingOrderService.del(id);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+    /**
+     * 当前人员的会议提醒
+     */
+    @ResponseBody
+    @RequestMapping(value= "/findhytx",method = RequestMethod.POST)
+    public JsonResult findhytx() {
+    	JsonResult result = new JsonResult();
+    	Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+    	String userid= usermap.get("id").toString();
+    	Date date = new Date();
+    	SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	String sj=dateFormat.format(date);
+		try {
+			List<Map<String,Object>> list = cMeetingOrderService.findhytx(userid,sj);
+			result.setData(list);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 当前人员会议提醒更多
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/morelist")
+    public GridJsonResult morelistJson(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("userid", usermap.get("id").toString());
+			Date date = new Date();
+	    	SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	    	String sj=dateFormat.format(date);
+	    	map.put("sj", sj);
+			List<Map<String,Object>> list = cMeetingOrderService.findmoreCMeetingOrderList(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 我的会议
+     */
+    @ResponseBody
+    @RequestMapping(value= "/findwdhy",method = RequestMethod.POST)
+    public JsonResult findwdhy() {
+    	JsonResult result = new JsonResult();
+    	Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+    	String userid= usermap.get("id").toString();
+		try {
+			List<Map<String,Object>> list = cMeetingOrderService.findwdhy(userid);
+			result.setData(list);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+    /**
+     * 当前人员的待办事项
+     */
+    @ResponseBody
+    @RequestMapping(value= "/finddbsx",method = RequestMethod.POST)
+    public JsonResult finddbsx() {
+    	JsonResult result = new JsonResult();
+    	Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+    	String userid= usermap.get("id").toString();
+		try {
+			List<Map<String,Object>> list = cMeetingOrderService.findCjihuadbsx(userid);
+			result.setData(list);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 当前人员待办事项更多
+     * @param map
+     * @param page
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/dbsxmorelist")
+    public GridJsonResult dbsxmorelistJson(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("userid", usermap.get("id").toString());
+			List<Map<String,Object>> list = cMeetingOrderService.finddbsxmorelist(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    /**
+     * 会议签到情况查询
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/checkInList")
+    public GridJsonResult checkInList(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;
+		try {
+			map.put("page",page);
+			Date date = new Date();
+	    	SimpleDateFormat dateFormat= new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	    	String sj=dateFormat.format(date);
+	    	map.put("sj",sj);
+	    	//查询登录人员的角色是部门管理员、分公司领导、总公司领导还是中心领导
+	    	Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+	    	List<Map<String,Object>> jslist = cMeetingOrderService.findje(usermap.get("id").toString());
+	    	List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
+	    	System.out.println(jslist);
+	    	String role="";
+	    	for(int i=0;i<jslist.size();i++) {
+	    		if(jslist.get(i).get("role_id").equals("6178ed4bee1e11e9833900e081bbbd32")) {//部门管理员
+	    			role="部门管理员";
+	    		}
+	    	}
+	    	for(int i=0;i<jslist.size();i++) {
+	    		if(jslist.get(i).get("role_id").equals("6dbbaaf8ee1e11e9833900e081bbbd32")) {//分公司领导
+	    			role="分公司领导";
+	    		}	
+	    	}
+	    	for(int i=0;i<jslist.size();i++) {
+	    		if(jslist.get(i).get("role_id").equals("6928ce7bfae611e99b3500e081bbbd32")) {//中心领导
+	    			role="中心领导";
+	    		}	
+	    	}
+	    	for(int i=0;i<jslist.size();i++) {
+	    		if(jslist.get(i).get("role_id").equals("6e72b46afae611e99b3500e081bbbd32")) {//总公司领导
+	    			role="总公司领导";
+	    		}	
+	    	}
+	    	if(role.equals("部门管理员")) {
+	    		List<Map<String,Object>> bmlist = cAttendanceRecordService.findbm1(usermap.get("id").toString());//查询员工所在部门
+	    		map.put("depid", bmlist.get(0).get("id"));
+	    		list = cMeetingOrderService.checkInList(map).getList();
+	    	}else if(role.equals("分公司领导")){
+	    		List<Map<String,Object>> bmlist = cAttendanceRecordMapper.findGsList(usermap.get("id").toString());//查询员工所在分公司
+	    		map.put("fgsid", bmlist.get(0).get("parent_id"));
+	    		list = cMeetingOrderService.checkInList(map).getList();
+	    	}else if(role.equals("中心领导")){
+	    		List<Map<String,Object>> bmlist = cAttendanceRecordMapper.findGsList(usermap.get("id").toString());//查询员工所在中心
+	    		map.put("zxid", bmlist.get(0).get("parent_id"));
+	    		list = cMeetingOrderService.checkInList(map).getList();
+	    	}else if(role.equals("总公司领导")){
+	    		list = cMeetingOrderService.checkInList(map).getList();
+	    	}
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    @RequestMapping(value= "/checkInListDetailedym",method = RequestMethod.GET)
+    public String checkInListDetailedym(ModelMap model,String id) {
+    	model.addAttribute("id",id);
+        return "main/meeting/checkInDetailed";
+    }
+    /**
+     * 会议签到情况详细(按会议查)
+     */
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/checkInListDetailed")
+    public GridJsonResult checkInListDetailed(@RequestParam Map<String, Object> map, EntyPage page,String id) {
+        GridJsonResult result = null;
+		try {
+			map.put("id", id);
+			map.put("page",page);
+			List<Map<String,Object>> list = cMeetingOrderService.checkInListDetailed(map).getList();
+			result = new GridJsonResult(page);
+			result.setData(list);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+    /**
+     * 节目审核不通过
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value= "/jmshbtg",method = RequestMethod.POST)
+    public JsonResult jmshbtg(String id) {
+    	JsonResult result = new JsonResult();
+    	//添加审核记录 
+        int i = cjihuaService.addSHJH(id,"0");
+        if(i<0) {
+        	return result;
+        }
+		try {
+			 result = cMeetingOrderService.jmshbtg(id);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+    /**
+     * 节目审核通过
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value= "/jmshtg",method = RequestMethod.POST)
+    public JsonResult jmshtg(String id) {
+    	JsonResult result = new JsonResult();
+    	//添加审核记录 
+    	int i = cjihuaService.addSHJH(id,"1");
+    	if(i<0) {
+        	return result;
+        }
+		try {
+			 result = cMeetingOrderService.jmshtg(id);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+    /**
+     * 领导会议统计导出
+     */
+    @RequestMapping(value= "/export",method = RequestMethod.POST)
+    public void excelExport(HttpServletResponse response,@RequestParam Map<String, Object> map, EntyPage page) {
+    	
+    	/*
+    	try {
+	    	map.put("page",page);
+	    	List<Map<String,Object>> sjlist = cMeetingOrderService.findmeetingListld(map).getList();
+	    	System.out.println("sjlist==="+sjlist);
+	    	List<Map<String,Object>> list=new ArrayList<>();
+	    	for(int i=0;i<sjlist.size();i++) {
+	    		Map<String,Object> map1=new HashMap<String, Object>();
+	    		map1.put("date", "星期一");
+	    		if(sjlist.get(i).get("xq1")!="") {
+	    			String[] xq1=sjlist.get(i).get("xq1").toString().split(";");	    				    	    	
+	    	    	map1.put("hysj", xq1[0]);
+	    	    	map1.put("hymc", xq1[1]);
+	    	    	map1.put("hydd", xq1[2]);
+	    	    	map1.put("zcr", xq1[4]);
+	    	    	map1.put("chld", xq1[5]);
+	    	    	map1.put("lxr", xq1[3]);	    	    	
+	    		}
+	    		list.add(map1);
+	    		
+    			Map<String,Object> map2=new HashMap<String, Object>();
+    			map2.put("date", "星期二");
+	    		if(sjlist.get(i).get("xq2")!="") {	  
+	    			String[] xq2=sjlist.get(i).get("xq2").toString().split(";");	    	    	
+	    	    	map2.put("hysj", xq2[0]);
+	    	    	map2.put("hymc", xq2[1]);
+	    	    	map2.put("hydd", xq2[2]);
+	    	    	map2.put("zcr", xq2[4]);
+	    	    	map2.put("chld", xq2[5]);
+	    	    	map2.put("lxr", xq2[3]);	    	    	
+	    		}
+	    		list.add(map2);
+	    		
+	    		Map<String,Object> map3=new HashMap<String, Object>();
+    			map3.put("date", "星期三");
+	    		if(sjlist.get(i).get("xq3")!="") {	  
+	    			String[] xq3=sjlist.get(i).get("xq3").toString().split(";");	    	    	
+	    	    	map3.put("hysj", xq3[0]);
+	    	    	map3.put("hymc", xq3[1]);
+	    	    	map3.put("hydd", xq3[2]);
+	    	    	map3.put("zcr", xq3[4]);
+	    	    	map3.put("chld", xq3[5]);
+	    	    	map3.put("lxr", xq3[3]);	    	    	
+	    		}
+	    		list.add(map3);
+	    		
+	    		Map<String,Object> map4=new HashMap<String, Object>();
+    			map2.put("date", "星期四");
+	    		if(sjlist.get(i).get("xq4")!="") {	  
+	    			String[] xq4=sjlist.get(i).get("xq4").toString().split(";");	    	    	
+	    	    	map4.put("hysj", xq4[0]);
+	    	    	map4.put("hymc", xq4[1]);
+	    	    	map4.put("hydd", xq4[2]);
+	    	    	map4.put("zcr", xq4[4]);
+	    	    	map4.put("chld", xq4[5]);
+	    	    	map4.put("lxr", xq4[3]);	    	    	
+	    		}
+	    		list.add(map4);
+	    		
+	    		Map<String,Object> map5=new HashMap<String, Object>();
+    			map5.put("date", "星期五");
+	    		if(sjlist.get(i).get("xq5")!="") {	  
+	    			String[] xq5=sjlist.get(i).get("xq5").toString().split(";");	    	    	
+	    	    	map5.put("hysj", xq5[0]);
+	    	    	map5.put("hymc", xq5[1]);
+	    	    	map5.put("hydd", xq5[2]);
+	    	    	map5.put("zcr", xq5[4]);
+	    	    	map5.put("chld", xq5[5]);
+	    	    	map5.put("lxr", xq5[3]);	    	    	
+	    		}
+	    		list.add(map5);
+	    		
+	    		Map<String,Object> map6=new HashMap<String, Object>();
+    			map6.put("date", "星期六");
+	    		if(sjlist.get(i).get("xq6")!="") {	  
+	    			String[] xq6=sjlist.get(i).get("xq6").toString().split(";");	    	    	
+	    	    	map6.put("hysj", xq6[0]);
+	    	    	map6.put("hymc", xq6[1]);
+	    	    	map6.put("hydd", xq6[2]);
+	    	    	map6.put("zcr", xq6[4]);
+	    	    	map6.put("chld", xq6[5]);
+	    	    	map6.put("lxr", xq6[3]);	    	    	
+	    		}
+	    		list.add(map6);
+	    		
+	    		Map<String,Object> map7=new HashMap<String, Object>();
+    			map7.put("date", "星期天");
+	    		if(sjlist.get(i).get("xq7")!="") {	  
+	    			String[] xq7=sjlist.get(i).get("xq7").toString().split(";");	    	    	
+	    	    	map7.put("hysj", xq7[0]);
+	    	    	map7.put("hymc", xq7[1]);
+	    	    	map7.put("hydd", xq7[2]);
+	    	    	map7.put("zcr", xq7[4]);
+	    	    	map7.put("chld", xq7[5]);
+	    	    	map7.put("lxr", xq7[3]);	    	    	
+	    		}
+	    		list.add(map7);
+	    	}
+	    	String[] titles = new String[]{"日期","会议时间","会议名称","会议地点","主持人","参会领导","联系人"};
+	    	String[] cols = new String[]{"date","hysj","hymc","hydd","zcr","chld","lxr"};
+    		String[] widths = new String[]{"200","200","200","200","200","200","200"};
+    		InputStream is = excelManager.exportExcel(titles, cols, widths, list);
+    		String fileName = (String)map.get("fileName");
+    		excelManager.downloadExcel(response, is, fileName);
+    		
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}*/
+/*
+    	try {
+    		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+	    	String award = (String) usermap.get("cname");
+	    	if (!StringUtils.equals(award, "0")) {
+	    		map.put("award", award);
+	    	}
+			map.put("page",page);
+			List<Map<String,Object>> list = applyService.findGzSealApplyCCountrySysDictionaryExcelList(map).getList();
+    		String[] titles = new String[]{"申办单号","单位","申请人","联系电话","事由","印章类型","退回原因","申请时间","状态"};
+        	String[] cols = new String[]{"apply_num","name","applicant","phone","cause","stype","reason","apply_time","steps"};
+    		String[] widths = new String[]{"200","200","200","200","200","200","200","200","200"};
+    		InputStream is = excelManager.exportExcel(titles, cols, widths, list);
+    		String fileName = (String)map.get("fileName");
+    		excelManager.downloadExcel(response, is, fileName);
+    	} catch (Exception e) {
+			e.printStackTrace();
+		}*/
+    }
+}

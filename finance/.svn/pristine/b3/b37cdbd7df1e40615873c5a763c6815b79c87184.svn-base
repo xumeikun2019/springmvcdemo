@@ -1,0 +1,139 @@
+package com.cf.project.controller;
+
+import com.alibaba.fastjson.JSONArray;
+import com.cf.project.Constants;
+import com.cf.project.mybatis.model.SysDepartment;
+import com.cf.project.mybatis.model.SysDepartmentUser;
+import com.cf.project.service.SysDepartmentService;
+import com.cf.util.EntyPage;
+import com.cf.util.GridJsonResult;
+import com.cf.util.JsonResult;
+import com.cf.util.SessionUtil;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/main/department")
+public class SysDepartmentController extends GridController {
+    @Autowired
+    private SysDepartmentService sysDepartmentService;
+
+    
+	@ResponseBody
+	@RequestMapping("/tree")
+	public JsonResult listTree(@RequestParam Map<String, Object> map) {
+		JsonResult result = null;
+		try {
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			String userId = (String)usermap.get("id");
+			map.put("userId", userId);
+			result = sysDepartmentService.findTreeList(map);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	@ResponseBody
+	@RequestMapping("/etree")
+	public Map<String,Object> listETree(@RequestParam Map<String, Object> map) {
+		Map<String,Object> treeMap =new HashMap<>();
+		try {
+			treeMap = sysDepartmentService.findETreeList(map);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return treeMap;
+	}
+
+    @RequestMapping(value= "/edit",method = RequestMethod.GET)
+    public String edit(String id, ModelMap model) {
+        try {			SysDepartment pojo = sysDepartmentService.findSysDepartmentListById(id);			model.addAttribute("pojo",pojo);		} catch (Exception e) {			e.printStackTrace();		}		return "main/department/edit";
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/save",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult create(@RequestBody SysDepartment pojo) {
+        JsonResult result = new JsonResult();		try {			 result = sysDepartmentService.saveOrUpdate(pojo);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/del",method = RequestMethod.POST)
+    public JsonResult del(String id) {
+        JsonResult result = new JsonResult();		try {			 result = sysDepartmentService.del(id);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+    
+    @ResponseBody
+    @RequestMapping(value= "/eshow",method = RequestMethod.POST)
+    public JsonResult editShow(String id) {
+        JsonResult result = new JsonResult();
+		try {
+			SysDepartment sysDepartment = sysDepartmentService.findSysDepartmentListById(id);
+			result.setData(sysDepartment);
+		} catch (Exception e) {
+			result.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return result;
+    }
+    
+ 
+    @RequestMapping(value= "/import",method = RequestMethod.GET)
+    public String impor(ModelMap model) {
+        return "main/department/import";
+    }
+    /**
+     * 部门树
+     * @param map
+     * @return
+     */
+    @ResponseBody
+	@RequestMapping("/listTree")
+	public JSONArray listTree1(@RequestParam Map<String, Object> map) {
+    	JSONArray result = null;
+		try {
+			result = sysDepartmentService.findTreeListToJSON(map);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+    /**
+     * 员工树
+     * @param map
+     * @return
+     */
+    @ResponseBody
+	@RequestMapping("/userTree")
+	public JSONArray userTree(@RequestParam Map<String, Object> map) {
+    	JSONArray result = null;
+		try {
+			result = sysDepartmentService.finduserTreeListToJSON(map);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+    /**
+     * 会议室树
+     * @param map
+     * @return
+     */
+    @ResponseBody
+	@RequestMapping("/placeTree")
+	public JSONArray placeTree(@RequestParam Map<String, Object> map) {
+    	JSONArray result = null;
+		try {
+			result = sysDepartmentService.findplaceTreeListToJSON(map);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+}

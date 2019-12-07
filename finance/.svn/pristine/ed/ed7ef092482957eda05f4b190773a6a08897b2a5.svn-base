@@ -1,0 +1,18 @@
+package com.cf.project.service;
+
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import java.util.Map;
+
+public interface CMeetingOrderService {
+    JsonListResult findCMeetingOrderList(Map<String, Object> map) throws Exception;
+
+    CMeetingOrder findCMeetingOrderListById(String id) throws Exception;
+
+    JsonResult saveOrUpdate(CMeetingOrder pojo) throws Exception;
+
+    JsonResult update(CMeetingOrder pojo) throws Exception;
+
+    JsonResult del(String id) throws Exception;
+}

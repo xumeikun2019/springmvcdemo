@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans     http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                        http://www.springframework.org/schema/context   http://www.springframework.org/schema/context/spring-context-3.2.xsd
+                        http://www.springframework.org/schema/mvc       http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+                        http://www.springframework.org/schema/tx        http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+                        http://www.springframework.org/schema/aop       http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+                        http://www.springframework.org/schema/cache     http://www.springframework.org/schema/cache/spring-cache-3.2.xsd">
+	<!-- 自动扫描 -->
+	<context:component-scan base-package="com" />
+	<!-- 引入配置文件 -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:redis.properties</value>
+				<value>classpath:common.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+
+		<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName.javaframe}" />
+		<property name="url" value="${jdbc.url.javaframe}" />
+		<property name="username" value="${jdbc.username.javaframe}" />
+		<property name="password" value="${jdbc.password.javaframe}" />
+
+		<property name="filters" value="${filters}" />
+		<property name="maxActive" value="${maxActive}" />
+		<property name="initialSize" value="${initialSize}" />
+		<property name="maxWait" value="${maxWait}" />
+		<property name="minIdle" value="${minIdle}" />
+
+		<property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}" />
+		<property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}" />
+
+		<property name="validationQuery" value="${validationQuery}" />
+		<property name="testWhileIdle" value="${testWhileIdle}" />
+		<property name="testOnBorrow" value="${testOnBorrow}" />
+		<property name="testOnReturn" value="${testOnReturn}" />
+		<property name="maxOpenPreparedStatements" value="${maxOpenPreparedStatements}" />
+		<property name="removeAbandoned" value="${removeAbandoned}" />
+		<property name="removeAbandonedTimeout" value="${removeAbandonedTimeout}" />
+		<property name="logAbandoned" value="${logAbandoned}" />
+	</bean>
+
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations"
+			value="classpath:com/cf/project/mybatis/mapper/*.xml" />
+		<property name="plugins">
+			<array>
+				<bean class="com.github.pagehelper.PageInterceptor">
+					 <property name="properties">
+						<value>
+						    helperDialect=mysql
+							rowBoundsWithCount=true
+							offsetAsPageNum=true
+						</value>
+					</property> 
+					
+				</bean>
+				<bean class="com.cf.project.interceptor.PageInterceptor">
+				</bean>
+			</array>
+		</property>
+	</bean>
+
+	<!-- DAO接口所在包名，Spring会自动查找其下的类 -->
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.cf.project.mybatis.dao" />
+	</bean>
+
+	<!-- transaction manager, use JtaTransactionManager for global tx -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+    <aop:config>
+        <aop:advisor id="managerTx" advice-ref="txAdvice" pointcut="execution(* *..service..*Service.*(..))"/>
+    </aop:config>
+    
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED" rollback-for="Exception,RuntimeException" read-only="false"/>
+            <tx:method name="merge*" propagation="REQUIRED" rollback-for="Exception,RuntimeException" read-only="false"/>
+            <tx:method name="update*" propagation="REQUIRED" rollback-for="Exception,RuntimeException" read-only="false"/>
+            <tx:method name="del*" propagation="REQUIRED" rollback-for="Exception,RuntimeException" read-only="false"/>
+            <tx:method name="find*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="select*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="count*" propagation="REQUIRED" read-only="true"/> 
+            <tx:method name="get*" propagation="REQUIRED" read-only="true"/> 
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+    
+</beans>

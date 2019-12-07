@@ -1,0 +1,339 @@
+package com.cf.project.service.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.project.mybatis.dao.CUserMapper;
+import com.cf.project.mybatis.dao.SysDepartmentMapper;
+import com.cf.project.mybatis.dao.SysDepartmentUserMapper;
+import com.cf.project.mybatis.dao.SysInfoMapper;
+import com.cf.project.mybatis.dao.SysUserRoleMapper;
+import com.cf.project.mybatis.model.CUser;
+import com.cf.project.mybatis.model.SysDepartment;
+import com.cf.project.mybatis.model.SysDepartmentUser;
+import com.cf.project.mybatis.model.SysUserRoleKey;
+import com.cf.project.security.UserRealm;
+import com.cf.project.service.CUserService;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.EntyPage;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import com.cf.util.MD5;
+import com.cf.util.SessionUtil;
+
+import labor.add;
+
+@Service("userService")
+public class CUserServiceImpl implements CUserService {
+
+	@Autowired
+	private CUserMapper cUserMapper;
+	
+	@Autowired
+	private SysUserRoleMapper sysUserRoleMapper;
+	
+	@Autowired
+	private SysDepartmentUserMapper sysDepartmentUserMapper;
+	
+    @Autowired
+    private SysDepartmentMapper sysDepartmentMapper;
+    @Autowired
+    private SysInfoMapper sysInfoMapper;
+
+	/**
+	 * 重置密码
+	 */
+	@CacheClear
+	public JsonResult updatePwd(String id,String username) throws Exception{
+		JsonResult jResult = new JsonResult();
+			int result = 0;
+			if(StringUtils.isNotBlank(id)) {
+				UserRealm r = new UserRealm();
+				String md5 = r.md5(MD5.MD5("123456"+username), username);
+				Date lTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+				result = cUserMapper.updateById(id,lTime,md5);
+			}
+			if(result == 0) {
+				jResult.setResult(Constants.OPERATION_FAIL);
+			}
+		return jResult;
+	}
+	
+	@SuppressWarnings("unchecked")
+	//@Cache
+	public JsonListResult findCUserList(Map<String, Object> map) throws Exception {
+		List<Map<String,Object>> list = new ArrayList<>();
+		Map<String, Object> departmentMap = new HashMap<>();
+		String level;
+		if(null == map.get("departmentId")) {
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("userid",usermap.get("id").toString());
+			departmentMap = sysDepartmentMapper.selectByUserId(map);
+			level = departmentMap.get("level").toString();
+			map.put("departmentId", departmentMap.get("id").toString());
+		}else {
+			SysDepartment department = sysDepartmentMapper.selectByPrimaryKey(map.get("departmentId").toString());
+			level = department.getLevel().toString();
+		}
+    			list = cUserMapper.findByHDPage(map);
+        
+		EntyPage page = (EntyPage) map.get("page");
+		JsonListResult jsonResult = new JsonListResult(page,list);
+		return jsonResult;
+    }
+	@CacheClear
+	public JsonListResult findCUserListsh(Map<String, Object> map) throws Exception {
+		List<Map<String,Object>> list = new ArrayList<>();
+		Map<String, Object> departmentMap = new HashMap<>();
+		String level;
+		if(null == map.get("departmentId")) {
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("userid",usermap.get("id").toString());
+			departmentMap = sysDepartmentMapper.selectByUserId(map);
+			level = departmentMap.get("level").toString();
+			map.put("departmentId", departmentMap.get("id").toString());
+		}else {
+			SysDepartment department = sysDepartmentMapper.selectByPrimaryKey(map.get("departmentId").toString());
+			level = department.getLevel().toString();
+		}
+		map.put("aa","aa");
+    			list = cUserMapper.findByHDPage(map);
+		EntyPage page = (EntyPage) map.get("page");
+		JsonListResult jsonResult = new JsonListResult(page,list);
+		return jsonResult;
+    }
+    
+    @Cache
+    public CUser findCUserListById(String id) throws Exception {
+    	CUser cUser = this.cUserMapper.selectByPrimaryKey(id);
+    	String stringroleIds = sysUserRoleMapper.findByUserId(id);
+    	if(StringUtils.isNotBlank(stringroleIds)) {
+    		cUser.setStringRoleIds(stringroleIds);
+    	}
+        return cUser;
+    }
+
+    @CacheClear
+    public JsonResult saveOrUpdate(CUser pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();
+		if (pojo != null) {
+			String id = pojo.getId();
+			int flag = cUserMapper.findUsername(pojo.getUsername(), id);
+			int result = 0;
+			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+			if(flag > 0) {
+				jsonResult.setResult("username");
+				jsonResult.setMessage("用户名重复！！！请重新填写");
+				return jsonResult;
+			}
+			
+			if(StringUtils.isNotBlank(pojo.getModified()) && StringUtils.isNotBlank(id)) {
+				UserRealm r = new UserRealm();
+				String md5 = r.md5(MD5.MD5(pojo.getModified()+pojo.getUsername()), pojo.getUsername());
+				int repeat = cUserMapper.findBypwd(md5, id);
+				if(repeat <= 0) {
+					jsonResult.setResult("password");
+					jsonResult.setMessage("初始密码输入错误！！！请重新输入");
+					return jsonResult;
+				}
+				pojo.setPassword(r.md5(MD5.MD5(pojo.getPassword()+pojo.getUsername()), pojo.getUsername()));
+			}
+			
+			
+			if (StringUtils.isNotBlank(id)) {
+				pojo.setLastTime(dateTime);
+				result = cUserMapper.updateByPrimaryKeySelective(pojo);
+				SysUserRoleKey surk = new SysUserRoleKey();
+				sysUserRoleMapper.deleteByUserId(id);
+				List<Map<String, Object>> roleids = pojo.getRoleids();
+				if(roleids != null&&roleids.size()>0){
+					for (Map<String, Object> map : roleids) {
+						surk.setUserId(pojo.getId());
+						surk.setRoleId(map.get("id").toString());
+						result = sysUserRoleMapper.insert(surk);
+					}
+					//先删除 在添加
+					
+				}
+			} else {
+				String uuid = UUID.randomUUID().toString().replaceAll("-",""); 
+				SysUserRoleKey surk = new SysUserRoleKey();
+				UserRealm r = new UserRealm();
+				String md5="";
+				if(StringUtils.isNotBlank(pojo.getPassword())) {
+					md5 = r.md5(MD5.MD5(pojo.getPassword()+pojo.getUsername()), pojo.getUsername());
+				}else {
+					md5 = r.md5(MD5.MD5("123456"+pojo.getUsername()), pojo.getUsername());
+				}
+				pojo.setId(uuid);
+				pojo.setPassword(md5);
+				pojo.setAddTime(dateTime);
+				pojo.setLastTime(dateTime);
+				result = cUserMapper.insertSelective(pojo);
+				List<Map<String, Object>> roleids = pojo.getRoleids();
+				if(roleids != null&&roleids.size()>0){
+					for (Map<String, Object> map : roleids) {
+						surk.setUserId(pojo.getId());
+						surk.setRoleId(map.get("id").toString());
+						result = sysUserRoleMapper.insert(surk);
+					}
+			}
+				SysDepartmentUser record = new SysDepartmentUser();
+				record.setDepartmentId(pojo.getDepartmentId());
+				record.setUserId(pojo.getId());
+				sysDepartmentUserMapper.insertSelective(record);
+				//添加人员的同时，往打卡设备上上传人员信息()
+				/*
+				List<Map<String,Object>> list = sysInfoMapper.findIp();
+				add Add=new add();
+				for(int i=0;i<list.size();i++) {
+					Add.tjry(list.get(i).get("val").toString(),pojo.getId(), pojo.getRealname());
+					if(pojo.getFeature()==null) {
+						Add.tjryzp(list.get(i).get("val").toString(),pojo.getId(), pojo.getFeature());
+					}
+				}*/
+				
+			if (result == 0) {
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+			}
+		}
+		
+    }
+		return jsonResult;
+}
+
+    @CacheClear
+    public JsonResult update(CUser pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();
+        Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+        pojo.setLastTime(dateTime);
+		int result = cUserMapper.updateByPrimaryKeySelective(pojo);
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult del(String id) throws Exception {
+    	 JsonResult jsonResult = new JsonResult();
+ 		int result = 0;
+ 		if (StringUtils.contains(id,",")) {
+ 			String[] idsArr = id.split(",");
+ 			if (idsArr.length > 0) {
+ 				for (String idArr : idsArr) {
+ 					result = cUserMapper.deleteByPrimaryKey(idArr);
+ 					//删除角色
+ 					sysUserRoleMapper.deleteByUserId(id);
+ 					//删除部门
+ 		 			sysDepartmentUserMapper.deleteByUserId(id);
+ 					if (result == 0) {
+ 						break;
+ 					}
+ 				}
+ 			}
+ 		} else {
+ 			result = cUserMapper.deleteByPrimaryKey(id);
+ 			//删除角色
+ 			sysUserRoleMapper.deleteByUserId(id);
+ 			//删除部门
+ 			sysDepartmentUserMapper.deleteByUserId(id);
+ 		}
+ 		if (result == 0) {
+ 			jsonResult.setResult(Constants.OPERATION_FAIL);
+ 		}
+ 		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult updateState(String id) throws Exception {
+    	int flag = 0;
+    	JsonResult jsonResult = new JsonResult();
+    	List<Map<String, Object>> stateList = cUserMapper.findByPid(id);
+    	for(Map<String, Object> st : stateList) {
+    		String state = (String) st.get("state");
+	    	if(StringUtils.equals(state, "F")) {
+	    		flag = cUserMapper.updateByPidT(id);
+	    	}else {
+	    		flag = cUserMapper.updateByPidF(id);
+	    	}
+    	}
+    	
+    	if(flag == 0) {
+    		jsonResult.setResult(Constants.OPERATION_FAIL);
+    	}
+		return jsonResult;
+	}
+    
+    @Override
+    public String findCUserIdByName(String user) {
+    	String id = cUserMapper.findCUserIdByName(user);
+    	return id;
+    }
+
+	/**
+	 * app 用户登录
+	 */
+	@CacheClear
+	public JsonResult selectByUser(String username, String password) {
+		JsonResult jsonResult = new JsonResult();
+		UserRealm realm = new UserRealm();
+		CUser user = cUserMapper.selectByUser(username);
+		if (user == null) {
+			jsonResult.setMessage("用户名或密码错误!");
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			return jsonResult;
+		}
+
+		String dbPassword = user.getPassword();
+		String md5password = realm.md5(MD5.MD5(password + username), username);
+		if (md5password.equals(dbPassword)) {
+			// 获取userid
+			String userId = user.getId();
+			// 根据userid查询user_role中间表
+			List<String> roleList = sysUserRoleMapper.findByUserRoles(userId);
+			// 判断roleList集合中是否存在会议管理员id
+			if (!roleList.contains("758e47ccee1e11e9833900e081bbbd32")) {
+				jsonResult.setMessage("对不起,您没有该权限!");
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+				return jsonResult;
+			}
+			jsonResult.setMessage("登录成功!");
+			return jsonResult;
+		}
+		jsonResult.setMessage("用户名或密码错误!");
+		jsonResult.setResult(Constants.OPERATION_FAIL);
+		return jsonResult;
+	}
+
+	@Override
+	public JsonResult delWechatId(String openId) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		int result = cUserMapper.delWechatId(openId);
+		if (result < 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	@Override
+	public JsonListResult findCUserListByOpenId(String openId) throws Exception {
+		JsonListResult jsonResult = new JsonListResult();
+		List<Map<String, Object>> list = cUserMapper.findCUserListByOpenId(openId);
+		jsonResult.setList(list);
+		return jsonResult;
+	}
+}

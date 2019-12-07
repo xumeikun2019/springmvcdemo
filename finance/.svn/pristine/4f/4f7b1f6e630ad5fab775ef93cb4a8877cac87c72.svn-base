@@ -1,0 +1,184 @@
+package com.cf.project.controller;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.cf.project.Constants;
+import com.cf.project.mybatis.model.CDevice;
+import com.cf.project.service.CDeviceService;
+import com.cf.project.service.CPlaceService;
+import com.cf.util.EntyPage;
+import com.cf.util.GridJsonResult;
+import com.cf.util.JsonResult;
+import com.cf.util.JsonUtil;
+
+@Controller
+@RequestMapping("/main/device")
+public class CDeviceController extends GridController {
+    @Autowired
+    private CDeviceService cDeviceService;
+    @Autowired
+    private CPlaceService cPlaceService;
+
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/list")
+    public GridJsonResult listJson(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;		try {			map.put("page",page);			List<Map<String,Object>> list = cDeviceService.findCDeviceList(map).getList();			result = new GridJsonResult(page);			result.setData(list);		} catch (Exception e) {			e.printStackTrace();		}		return result;
+    }
+
+    @RequestMapping(value= "/add",method = RequestMethod.GET)
+    public String add(ModelMap model) {
+        return "main/device/add";
+    }
+
+    @RequestMapping(value= "/edit",method = RequestMethod.GET)
+    public String edit(String id, ModelMap model) {
+        try {			CDevice pojo = cDeviceService.findCDeviceListById(id);
+			String placeId = pojo.getPlaceId();
+			//构造会议室数据(含楼层)
+			List<Map<String,Object>> list = cPlaceService.findAllCPlace();
+			//构造楼层数据(含会议室)
+			List<Map<String,Object>> listFloor = new ArrayList();
+			Set<String> ids = new HashSet();
+			for(Map<String,Object> map:list) {
+				if(!ids.contains(map.get("parentId").toString())) {
+					ids.add(map.get("parentId").toString());					
+					listFloor.add(map);
+				}	
+			}
+			String list2json = JsonUtil.writeList2JSON(list, false, true);
+			String list2jsonFloor = JsonUtil.writeList2JSON(listFloor, false, true);
+			model.addAttribute("pojo",pojo);			model.addAttribute("list",list2json);
+			model.addAttribute("listFloor",list2jsonFloor);
+		} catch (Exception e) {			e.printStackTrace();		}		return "main/registration/padEdit";
+    }
+
+    /**
+     * 跳转修改考勤机(attendance)
+     * @param id
+     * @param model
+     * @return
+     */
+    @RequestMapping(value= "/editCdevice",method = RequestMethod.GET)
+    public String editCdevice(String id, ModelMap model) {
+    	try {
+    		//根据id查询设备
+    		CDevice pojo = cDeviceService.findCDeviceListById(id);
+    		//构造楼层数据,查询所有楼层
+    		List<Map<String,Object>> floorList = cDeviceService.findCDeviceByFloor();
+    		String floor = JsonUtil.writeList2JSON(floorList, false, true);
+    		//存入域中
+    		model.addAttribute("floor",floor);
+    		model.addAttribute("pojo",pojo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return "main/registration/attendanceEdit";
+    }
+    /**
+     * 跳转修改广告机adv
+     * @param id
+     * @param model
+     * @return
+     */
+    @RequestMapping(value= "/editAdvCdevice",method = RequestMethod.GET)
+    public String editAdvCdevice(String id, ModelMap model) {
+    	try {
+    		//根据id查询设备
+    		CDevice pojo = cDeviceService.findCDeviceListById(id);
+    		//构造楼层数据,查询所有楼层
+    		List<Map<String,Object>> floorList = cDeviceService.findCDeviceByFloor();
+    		String floor = JsonUtil.writeList2JSON(floorList, false, true);
+    		//存入域中
+    		model.addAttribute("floor",floor);
+    		model.addAttribute("pojo",pojo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return "main/registration/advEdit";
+    }
+    
+    
+    @ResponseBody
+    @RequestMapping(value= "/save",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult create(@RequestBody CDevice pojo) {
+        JsonResult result = new JsonResult();		try {			 result = cDeviceService.saveOrUpdate(pojo);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/del",method = RequestMethod.POST)
+    public JsonResult del(String id) {
+        JsonResult result = new JsonResult();		try {			 result = cDeviceService.del(id);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+    
+    /**
+	 * web端pad设备绑定
+	 * 
+	 * @param cDevice
+	 * @return
+	 */
+    @ResponseBody
+	@RequestMapping(value = "/webBinding", method = RequestMethod.POST, consumes = "application/json")
+	public JsonResult Cdevice(@RequestBody CDevice pojo) {
+		JsonResult jsonResult = new JsonResult();
+		try {
+			String id = pojo.getId();
+			if(StringUtils.isEmpty(id)) {
+				jsonResult = cDeviceService.addCDevice(pojo);
+			}else {
+				jsonResult = cDeviceService.updateCDevice(pojo);
+			}
+		} catch (Exception e) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+		return jsonResult;
+	}
+    /**
+     * web端attendance(考勤机)和adv(广告机)绑定
+     */
+    @ResponseBody
+	@RequestMapping(value = "/cdeviceBinding", method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult addCdevice(@RequestBody CDevice pojo) {
+    	JsonResult jsonResult = new JsonResult();
+    	try {
+			String id = pojo.getId();
+			if(StringUtils.isEmpty(id)) {
+				jsonResult = cDeviceService.addDevice(pojo);
+			}else {
+				jsonResult = cDeviceService.updateDevice(pojo);
+			}
+		} catch (Exception e) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+    	
+    	return jsonResult;
+    }
+    @ResponseBody
+	@RequestMapping(value = "/ajax", method = RequestMethod.POST)
+    public JsonResult findByDevice(String ip) {
+    	JsonResult jsonResult = new JsonResult();
+    	try {
+    		jsonResult = cDeviceService.findByDeviceIp(ip);
+		} catch (Exception e) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+			e.printStackTrace();
+		}
+    	return jsonResult;
+    }
+}

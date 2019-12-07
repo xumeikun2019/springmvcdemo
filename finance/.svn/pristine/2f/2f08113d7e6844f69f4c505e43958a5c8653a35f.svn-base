@@ -1,0 +1,71 @@
+package com.cf.project.service.impl;
+
+import com.cf.project.mybatis.dao.CPlaceMapper;
+import com.cf.project.mybatis.model.CPlace;
+import com.cf.project.mybatis.model.SysDepartment;
+import com.cf.project.mybatis.model.SysDepartmentUser;
+import com.cf.project.service.CPlaceService;
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.EntyPage;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CPlaceServiceImpl implements CPlaceService {
+    @Autowired
+    private CPlaceMapper cPlaceMapper;
+
+    @Cache
+    public JsonListResult findCPlaceList(Map<String, Object> map) throws Exception {
+        List<Map<String,Object>> list = cPlaceMapper.findByHDPage(map);		EntyPage page = (EntyPage) map.get("page");		JsonListResult jsonResult = new JsonListResult(page,list);		return jsonResult;
+    }
+
+    @Cache
+    public CPlace findCPlaceListById(String id) throws Exception {
+        return this.cPlaceMapper.selectByPrimaryKey(id);
+    }
+
+    @CacheClear
+    public JsonResult saveOrUpdate(CPlace pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();		if (pojo != null) {			String id = pojo.getId();			int result = 0;			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");			if (StringUtils.isNotBlank(id)) {				pojo.setLastTime(dateTime);				result = cPlaceMapper.updateByPrimaryKeySelective(pojo);			} else {				pojo.setAddTime(dateTime);				pojo.setLastTime(dateTime);
+				CPlace parent = cPlaceMapper.selectByPrimaryKey(pojo.getParentId());
+				Integer level = parent.getLevel();
+				if(level >= 5) {
+					jsonResult.setResult(Constants.OPERATION_FAIL);
+					jsonResult.setMessage("无法继续添加");
+				}
+				else result = cPlaceMapper.insertSelective(pojo);			}			if (result == 0) {				jsonResult.setResult(Constants.OPERATION_FAIL);			}		}		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult update(CPlace pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();		Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");		pojo.setLastTime(dateTime);		int result = cPlaceMapper.updateByPrimaryKeySelective(pojo);		if (result == 0) {			jsonResult.setResult(Constants.OPERATION_FAIL);		}		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult del(String id) throws Exception {
+        JsonResult jsonResult = new JsonResult();		int result = 0;		if (StringUtils.contains(id,",")) {			String[] idsArr = id.split(",");			if (idsArr.length > 0) {				for (String idArr : idsArr) {					result = cPlaceMapper.deleteByPrimaryKey(idArr);					if (result == 0) {						break;					}				}			}		} else {			result = cPlaceMapper.deleteByPrimaryKey(id);		}		if (result == 0) {			jsonResult.setResult(Constants.OPERATION_FAIL);		}		return jsonResult;
+    }
+    
+    @Cache
+	public JsonResult findTreeList(Map<String, Object> map) throws Exception {
+		List<Map<String,Object>> list = cPlaceMapper.findTreeListByDepartment();
+		JsonResult jsonResult = new JsonResult();
+		jsonResult.setData(list);
+		return jsonResult;
+	}
+    
+    @Cache
+    public CPlace findSysDepartmentListById(String id) throws Exception {
+        return this.cPlaceMapper.selectByPrimaryKey(id);
+    }
+}

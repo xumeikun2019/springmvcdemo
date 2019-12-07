@@ -1,0 +1,682 @@
+package com.cf.project.service.impl;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.project.mybatis.dao.CRoomDeptMapper;
+import com.cf.project.mybatis.dao.CUserMapper;
+import com.cf.project.mybatis.dao.SysDepartmentMapper;
+import com.cf.project.mybatis.dao.SysDepartmentUserMapper;
+import com.cf.project.mybatis.dao.SysUserRoleMapper;
+import com.cf.project.mybatis.model.CUser;
+import com.cf.project.mybatis.model.SysDepartment;
+import com.cf.project.mybatis.model.SysDepartmentUser;
+import com.cf.project.mybatis.model.SysUserRoleKey;
+import com.cf.project.security.UserRealm;
+import com.cf.project.service.SysDepartmentService;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.GetTree;
+import com.cf.util.JsonResult;
+import com.cf.util.JsonTreeResult;
+import com.cf.util.MD5;
+import com.cf.util.SessionUtil;
+
+@Service
+public class SysDepartmentServiceImpl implements SysDepartmentService {
+	@Autowired
+	private SysDepartmentMapper sysDepartmentMapper;
+
+	@Autowired
+	private SysDepartmentUserMapper sysDepartmentUserMapper;
+
+	@Autowired
+	private GetTree getTree;
+
+	@Autowired
+	private CUserMapper cUserMapper;
+	@Autowired
+	private SysUserRoleMapper sysUserRoleMapper;
+	@Autowired
+	private CRoomDeptMapper cRoomDeptMapper;
+
+	@Cache
+	public SysDepartment findSysDepartmentListById(String id) throws Exception {
+		return this.sysDepartmentMapper.selectByPrimaryKey(id);
+	}
+
+	@Cache
+	public SysDepartmentUser findSysDepartmentListByUserId(String userid) throws Exception {
+		return this.sysDepartmentUserMapper.selectByUserId(userid);
+	}
+
+	@Cache
+	public Map<String, Object> findSysDepartmentByUserId(String userid) throws Exception {
+		Map<String, Object> userMap = new HashMap<>();
+		userMap.put("userid", userid);
+		return this.sysDepartmentMapper.selectByUserId(userMap);
+	}
+
+	@CacheClear
+	public JsonResult saveOrUpdate(SysDepartment pojo) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		if (pojo != null) {
+			String id = pojo.getId();
+			int result = 0;
+			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+			if (StringUtils.isNotBlank(id)) {
+				pojo.setLastTime(dateTime);
+				result = sysDepartmentMapper.updateByPrimaryKeySelective(pojo);
+			} else {
+				pojo.setAddTime(dateTime);
+				pojo.setLastTime(dateTime);
+				SysDepartment parent = sysDepartmentMapper.selectByPrimaryKey(pojo.getParentId());
+				Integer level = parent.getLevel();
+				if (level >= 5) {
+					jsonResult.setResult(Constants.OPERATION_FAIL);
+					jsonResult.setMessage("无法继续添加");
+				} else
+					result = sysDepartmentMapper.insertSelective(pojo);
+			}
+			if (result == 0) {
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+			}
+		}
+		return jsonResult;
+	}
+
+	@CacheClear
+	public JsonResult del(String id) throws Exception {
+		JsonResult jsonResult = new JsonResult();
+		int result = 0;
+		/*
+		 * if (StringUtils.contains(id,",")) { String[] idsArr = id.split(","); if
+		 * (idsArr.length > 0) { for (String idArr : idsArr) { result =
+		 * sysDepartmentMapper.deleteByPrimaryKey(idArr); if (result == 0) { break; } }
+		 * } } else {
+		 */
+		int count = sysDepartmentUserMapper.selectCountByPrimaryKey(id);
+		if (count > 0) {
+			jsonResult.setResult("notuser");
+			jsonResult.setMessage("该部门节点下,有用户!请先删除用户!");
+			return jsonResult;
+		} else {
+			result = sysDepartmentMapper.deleteByPrimaryKey(id);
+		}
+
+		// }
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+	}
+
+	@Cache
+	public JsonResult findTreeList(Map<String, Object> map) throws Exception {
+		SysDepartmentUser departmentUser = sysDepartmentUserMapper.selectByUserId((String) map.get("userId"));
+		String departmentId = departmentUser.getDepartmentId();
+		List<Map<String, Object>> list = sysDepartmentMapper.findTreeListByDepartment(departmentId);
+		// Map<String,Object> departmentMap = sysDepartmentMapper.selectByUserId(map);
+		// List<Map<String,Object>> list = new ArrayList<>();
+		/*
+		 * if(departmentMap != null) { String level =
+		 * departmentMap.get("level").toString(); if("1".equals(level)) {
+		 * list.addAll(sysDepartmentMapper.findTreeListLevel1(departmentMap)); }else
+		 * if("2".equals(level)) { list.add(departmentMap);
+		 * list.addAll(sysDepartmentMapper.findTreeListLevel2(departmentMap)); }else
+		 * if("3".equals(level)) { list.add(departmentMap);
+		 * list.addAll(sysDepartmentMapper.findTreeListLevel3(departmentMap)); }else
+		 * if("4".equals(level)) { list.add(departmentMap);
+		 * list.addAll(sysDepartmentMapper.findTreeListLevel4(departmentMap)); }else
+		 * if("5".equals(level)) { list.add(departmentMap);
+		 * //list.addAll(sysDepartmentMapper.findTreeListLevel3(departmentMap)); } }
+		 */
+		JsonResult jsonResult = new JsonResult();
+		jsonResult.setData(list);
+		return jsonResult;
+	}
+
+	/**
+	 * 部门树
+	 */
+	@CacheClear
+	public JSONArray findTreeListToJSON(Map<String, Object> map) throws Exception {
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		String pId = (String) usermap.get("id");
+		List<Map<String, Object>> list = sysDepartmentMapper.findTreeListToJson(map);
+		SysDepartmentUser sysDepartmentUser = sysDepartmentUserMapper.selectByUserId(pId);
+		StringBuilder resultBuilder = getDepId(sysDepartmentUser.getDepartmentId());
+		String[] sourceStrArray = resultBuilder.substring(0, resultBuilder.length() - 1).toString().split(",");
+		// 遍历所有部门,添加限制
+		/*
+		 * for(Map<String,Object> mapDep: list) { boolean isDep = false; for (int i = 0;
+		 * i < sourceStrArray.length; i++) {
+		 * if(mapDep.get("value").equals(sourceStrArray[i])) isDep = true; } if(!isDep)
+		 * mapDep.put("disabled", true); }
+		 */
+		String placeID = (String) map.get("placeID");
+		
+		List<String> deptId = cRoomDeptMapper.findCroomDeptByCplaceId(placeID);
+		for (Map<String, Object> mmap : list) {
+			for (String string : deptId) {
+				if(string.equals(mmap.get("value"))) {
+					mmap.put("checked","checked");
+				}
+			}
+		}
+//		JSONArray jsonArry = JSONArray.parseArray(JSON.toJSONString(list));
+		// 将部门json转为树形结构
+		JSONArray result = this.getTree.listToTree(JSONArray.parseArray(JSON.toJSONString(list)), "value", "pid",
+				"data");
+		JsonTreeResult jsonResult = new JsonTreeResult();
+		jsonResult.setData(result);
+		return result;
+	}
+	/**
+	 * 领导树
+	 */
+	@CacheClear
+	public JSONArray findldTreeListToJSON(Map<String, Object> map) throws Exception {
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		String pId = (String) usermap.get("id");
+		List<Map<String, Object>> list = sysDepartmentMapper.findldTreeListToJson(map);
+//		SysDepartmentUser sysDepartmentUser = sysDepartmentUserMapper.selectByUserId(pId);
+//		StringBuilder resultBuilder = getDepId(sysDepartmentUser.getDepartmentId());
+//		String[] sourceStrArray = resultBuilder.substring(0, resultBuilder.length() - 1).toString().split(",");
+		// 遍历所有部门,添加限制
+		/*
+		 * for(Map<String,Object> mapDep: list) { boolean isDep = false; for (int i = 0;
+		 * i < sourceStrArray.length; i++) {
+		 * if(mapDep.get("value").equals(sourceStrArray[i])) isDep = true; } if(!isDep)
+		 * mapDep.put("disabled", true); }
+		 */
+		//查询所有部门
+		List<String> deptIdList = sysDepartmentMapper.findAllDeptId();
+		String pName = (String) map.get("pName");
+		String selectDepartmentvalStr = (String) map.get("selectDepartmentval");
+		if(!StringUtils.isEmpty(selectDepartmentvalStr)) {
+			String[] checkList = selectDepartmentvalStr.split(",");
+			
+			for (Map<String, Object> map2 : list) {
+				String obj = (String) map2.get("title");
+				for (String checkId : checkList) {
+					if (checkId.equals(map2.get("value"))) {
+						map2.put("checked", "true");
+					}
+				}
+			}
+		}
+		
+		//搜索不等于null
+		if(!StringUtils.isEmpty(pName)) {
+			//获取所有的用户名字和id
+			 List<Map<String, Object>> userMaps = cUserMapper.findLdNameId();
+			//判断用户的名字包不包含关键子
+			 for (Map<String, Object> userMap : userMaps) {
+				 String realName = (String) userMap.get("realname");
+				if (realName.contains(pName)) {
+					//包含获取id
+					String userId = (String) userMap.get("id");
+					for (Map<String, Object> map2 : list) {
+						String ckID = (String) map2.get("value");
+						//判断id和map2里面的id是否一致
+						if(ckID.equals(userId)) {
+							//如果一致,选中
+							map2.put("checked", "true");
+						}
+						
+					}
+				}
+			}
+			
+		}
+		for (Map<String, Object> deptAll : list) {
+			for (String deptId : deptIdList) {
+				if (deptId.equals(deptAll.get("value"))) {
+					deptAll.put("disabled", "disabled");
+				}
+			}
+		}
+		
+		//System.out.println("list1==" + list);
+		// 将部门json转为树形结构
+		JSONArray result = this.getTree.listToTree(JSONArray.parseArray(JSON.toJSONString(list)), "value", "pid",
+				"data");
+		JsonTreeResult jsonResult = new JsonTreeResult();
+		jsonResult.setData(result);
+		return result;
+	}
+	
+	/**
+	 * 普通员工树
+	 */
+	@CacheClear
+	public JSONArray findptygTreeListToJSON(Map<String, Object> map) throws Exception {
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		String pId = (String) usermap.get("id");
+		List<Map<String, Object>> list = sysDepartmentMapper.findptygTreeListToJson(map);
+//		SysDepartmentUser sysDepartmentUser = sysDepartmentUserMapper.selectByUserId(pId);
+//		StringBuilder resultBuilder = getDepId(sysDepartmentUser.getDepartmentId());
+//		String[] sourceStrArray = resultBuilder.substring(0, resultBuilder.length() - 1).toString().split(",");
+		// 遍历所有部门,添加限制
+		/*
+		 * for(Map<String,Object> mapDep: list) { boolean isDep = false; for (int i = 0;
+		 * i < sourceStrArray.length; i++) {
+		 * if(mapDep.get("value").equals(sourceStrArray[i])) isDep = true; } if(!isDep)
+		 * mapDep.put("disabled", true); }
+		 */
+		//查询所有部门
+		List<String> deptIdList = sysDepartmentMapper.findAllDeptId();
+		String pName = (String) map.get("pName");
+		String selectDepartmentvalStr = (String) map.get("selectDepartmentval");
+		if(!StringUtils.isEmpty(selectDepartmentvalStr)) {
+			String[] checkList = selectDepartmentvalStr.split(",");
+			
+			for (Map<String, Object> map2 : list) {
+				String obj = (String) map2.get("title");
+				for (String checkId : checkList) {
+					if (checkId.equals(map2.get("value"))) {
+						map2.put("checked", "true");
+					}
+				}
+			}
+		}
+		
+		//搜索不等于null
+		if(!StringUtils.isEmpty(pName)) {
+			//获取所有的用户名字和id
+			 List<Map<String, Object>> userMaps = cUserMapper.findptygNameId();
+			//判断用户的名字包不包含关键子
+			 for (Map<String, Object> userMap : userMaps) {
+				 String realName = (String) userMap.get("realname");
+				if (realName.contains(pName)) {
+					//包含获取id
+					String userId = (String) userMap.get("id");
+					for (Map<String, Object> map2 : list) {
+						String ckID = (String) map2.get("value");
+						//判断id和map2里面的id是否一致
+						if(ckID.equals(userId)) {
+							//如果一致,选中
+							map2.put("checked", "true");
+						}
+						
+					}
+				}
+			}
+			
+		}
+		for (Map<String, Object> deptAll : list) {
+			for (String deptId : deptIdList) {
+				if (deptId.equals(deptAll.get("value"))) {
+					deptAll.put("disabled", "disabled");
+				}
+			}
+		}
+		
+		//System.out.println("list1==" + list);
+		// 将部门json转为树形结构
+		JSONArray result = this.getTree.listToTree(JSONArray.parseArray(JSON.toJSONString(list)), "value", "pid",
+				"data");
+		JsonTreeResult jsonResult = new JsonTreeResult();
+		jsonResult.setData(result);
+		return result;
+	}
+
+	/**
+	 * 员工树
+	 */
+	@CacheClear
+	public JSONArray finduserTreeListToJSON(Map<String, Object> map) throws Exception {
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		String pId = (String) usermap.get("id");
+		List<Map<String, Object>> list = sysDepartmentMapper.finduserTreeListToJson(map);
+//		SysDepartmentUser sysDepartmentUser = sysDepartmentUserMapper.selectByUserId(pId);
+//		StringBuilder resultBuilder = getDepId(sysDepartmentUser.getDepartmentId());
+//		String[] sourceStrArray = resultBuilder.substring(0, resultBuilder.length() - 1).toString().split(",");
+		// 遍历所有部门,添加限制
+		/*
+		 * for(Map<String,Object> mapDep: list) { boolean isDep = false; for (int i = 0;
+		 * i < sourceStrArray.length; i++) {
+		 * if(mapDep.get("value").equals(sourceStrArray[i])) isDep = true; } if(!isDep)
+		 * mapDep.put("disabled", true); }
+		 */
+		//查询所有部门
+		List<String> deptIdList = sysDepartmentMapper.findAllDeptId();
+		String pName = (String) map.get("pName");
+		String selectDepartmentvalStr = (String) map.get("selectDepartmentval");
+		if(!StringUtils.isEmpty(selectDepartmentvalStr)) {
+			String[] checkList = selectDepartmentvalStr.split(",");
+			
+			for (Map<String, Object> map2 : list) {
+				String obj = (String) map2.get("title");
+				for (String checkId : checkList) {
+					if (checkId.equals(map2.get("value"))) {
+						map2.put("checked", "true");
+					}
+				}
+			}
+		}
+		
+		//搜索不等于null
+		if(!StringUtils.isEmpty(pName)) {
+			//获取所有的用户名字和id
+			 List<Map<String, Object>> userMaps = cUserMapper.findAllNameId();
+			//判断用户的名字包不包含关键子
+			 for (Map<String, Object> userMap : userMaps) {
+				 String realName = (String) userMap.get("realname");
+				if (realName.contains(pName)) {
+					//包含获取id
+					String userId = (String) userMap.get("id");
+					for (Map<String, Object> map2 : list) {
+						String ckID = (String) map2.get("value");
+						//判断id和map2里面的id是否一致
+						if(ckID.equals(userId)) {
+							//如果一致,选中
+							map2.put("checked", "true");
+						}
+						
+					}
+				}
+			}
+			
+		}
+		for (Map<String, Object> deptAll : list) {
+			for (String deptId : deptIdList) {
+				if (deptId.equals(deptAll.get("value"))) {
+					deptAll.put("disabled", "disabled");
+				}
+			}
+		}
+		
+		//System.out.println("list1==" + list);
+		// 将部门json转为树形结构
+		JSONArray result = this.getTree.listToTree(JSONArray.parseArray(JSON.toJSONString(list)), "value", "pid",
+				"data");
+		JsonTreeResult jsonResult = new JsonTreeResult();
+		jsonResult.setData(result);
+		return result;
+	}
+
+	/**
+	 * 会议室树
+	 */
+	@CacheClear
+	public JSONArray findplaceTreeListToJSON(Map<String, Object> map) throws Exception {
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		String pId = (String) usermap.get("id");
+		List<Map<String, Object>> list = sysDepartmentMapper.findplaceTreeListToJson(map);
+		SysDepartmentUser sysDepartmentUser = sysDepartmentUserMapper.selectByUserId(pId);
+		StringBuilder resultBuilder = getDepId(sysDepartmentUser.getDepartmentId());
+		String[] sourceStrArray = resultBuilder.substring(0, resultBuilder.length() - 1).toString().split(",");
+		// 遍历所有部门,添加限制
+		/*
+		 * for(Map<String,Object> mapDep: list) { boolean isDep = false; for (int i = 0;
+		 * i < sourceStrArray.length; i++) {
+		 * if(mapDep.get("value").equals(sourceStrArray[i])) isDep = true; } if(!isDep)
+		 * mapDep.put("disabled", true); }
+		 */
+		// 将部门json转为树形结构
+		//System.out.println("list1==" + list);
+		JSONArray result = this.getTree.listToTree(JSONArray.parseArray(JSON.toJSONString(list)), "value", "pid",
+				"data");
+		JsonTreeResult jsonResult = new JsonTreeResult();
+		jsonResult.setData(result);
+		return result;
+	}
+
+	/**
+	 * 
+	 * @param depid 传入用户所在部门id
+	 * @return 返回所在部门id及子部门id
+	 */
+	private StringBuilder getDepId(String depid) {
+		StringBuilder result = new StringBuilder();
+		result.append(depid + ",");
+		List<Map<String, Object>> list = sysDepartmentMapper.selectByParentId(depid);
+		if (list.size() > 0) {
+			for (Map<String, Object> map : list)
+				result.append(getDepId("" + map.get("id")));
+		} else {
+			return result;
+		}
+		return result;
+
+	}
+
+	@Override
+	public Map<String, Object> findETreeList(Map<String, Object> map) {
+		Map<String, Object> menuMap = new HashMap<String, Object>();
+		Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+		SysDepartmentUser departmentUser = sysDepartmentUserMapper.selectByUserId(usermap.get("id").toString());
+		String departmentId = departmentUser.getDepartmentId();
+		map.put("pid", departmentId);
+		List<Map<String, Object>> menuList = sysDepartmentMapper.findETreeList(map);
+		List<Map<String, Object>> menuLists = new ArrayList<Map<String, Object>>();
+		if (!menuList.isEmpty()) {
+			for (Map<String, Object> menu : menuList) {
+				Map<String, Object> menus = new HashMap<String, Object>();
+				String id = menu.get("id").toString();
+				// int menuLevel = Integer.valueOf(menu.get("mlevel").toString());
+				if (departmentId.equals(id)) { // 一级菜单
+					// String id = (String)menu.get("id");
+					List<Map<String, Object>> smenuList = getChild(id, menuList);
+					String label = (String) menu.get("label");
+					menus.put("id", id);
+					menus.put("label", label);
+					if (smenuList != null && !smenuList.isEmpty()) {
+						menus.put("children", smenuList);
+					}
+					menuLists.add(menus);
+				}
+
+			}
+		}
+		menuMap.put("code", 0);
+		menuMap.put("data", menuLists);
+		return menuMap;
+	}
+
+	private List<Map<String, Object>> getChild(String id, List<Map<String, Object>> rootMenu) {
+		// 子菜单
+		List<Map<String, Object>> childList = new ArrayList<Map<String, Object>>();
+		for (Map<String, Object> menu : rootMenu) {
+			// 遍历所有节点，将父菜单id与传过来的id比较
+			String pid = (String) menu.get("pid");
+			if (StringUtils.isNotBlank(pid)) {
+				if (StringUtils.equals(id, pid)) {
+					childList.add(menu);
+				}
+			}
+		}
+		// 把子菜单的子菜单再循环一遍
+		for (Map<String, Object> menu : childList) {// 没有url子菜单还有子菜单
+			// 递归
+			String tid = (String) menu.get("id");
+			if (childList != null && !childList.isEmpty()) {
+				menu.put("children", getChild(tid, rootMenu));
+			}
+		}
+
+		// 递归退出条件
+		if (childList.size() == 0) {
+			return childList;
+		}
+		return childList;
+	}
+
+	@Override
+	@CacheClear
+	public JsonResult findSysDepartmentOne() throws Exception {
+
+		List<Map<String, Object>> list = sysDepartmentMapper.findSysDepartmentOne();
+
+		JsonResult jsonResult = new JsonResult();
+
+		jsonResult.setData(list);
+
+		return jsonResult;
+
+	}
+
+	@Override
+	@CacheClear
+	public JsonResult findSysDepartmentTwo(String id) throws Exception {
+
+		List<Map<String, Object>> list = sysDepartmentMapper.findSysDepartmentTwo(id);
+
+		JsonResult jsonResult = new JsonResult();
+
+		jsonResult.setData(list);
+
+		return jsonResult;
+
+	}
+
+	@Override
+	@CacheClear(key="CVisitor")
+	public JsonResult saveVisitors(Map<String, Object> map) throws Exception {
+
+		String[] idcardArr = map.get("idcardArr").toString().split(",");
+		String[] vnameArr = map.get("vnameArr").toString().split(",");
+		String[] imgUrlArr = map.get("imgUrl").toString().split(",");
+		String[] phoneArr = map.get("phoneArr").toString().split(",");
+		int result = 0;
+		Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");
+		String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+		// result = sysDepartmentMapper.saveVisitor(uuid, dateTime, dateTime);
+		//存入主表
+		result = sysDepartmentMapper.saveVisitors(uuid, map.get("weid").toString(), map.get("userid").toString(),
+		map.get("matter").toString(), dateTime, dateTime);
+
+		for (int i = 0; i < idcardArr.length; i++) {
+			String uuidv = UUID.randomUUID().toString().replaceAll("-", "");
+			//存入关联表
+			result = sysDepartmentMapper.saveVisitorUser(uuidv, uuid, idcardArr[i], vnameArr[i],imgUrlArr[i],phoneArr[i]);
+//			
+		}
+
+		JsonResult jsonResult = new JsonResult();
+		if (result == 0) {
+			jsonResult.setResult(Constants.OPERATION_FAIL);
+		}
+		return jsonResult;
+
+	}
+
+	@Override
+	@CacheClear
+	public JsonResult findSysDepartmentUser(String id) throws Exception {
+
+		List<Map<String, Object>> list = sysDepartmentMapper.findSysDepartmentUser(id);
+
+		JsonResult jsonResult = new JsonResult();
+
+		jsonResult.setData(list);
+
+		return jsonResult;
+
+	}
+
+	@Override
+	@CacheClear
+	
+	public JsonResult findVisits(String weid) throws Exception {
+
+		List<Map<String, Object>> list = sysDepartmentMapper.findVisits(weid);
+
+		JsonResult jsonResult = new JsonResult();
+
+		jsonResult.setData(list);
+
+		return jsonResult;
+
+	}
+
+	@Override
+	@CacheClear
+	public String importContract(List<Object[]> readAllExcel) {
+		String xx = "";
+		for (int i = 0; i < readAllExcel.size(); i++) {
+			if (readAllExcel.get(i)[0] != null && readAllExcel.get(i)[0].toString().indexOf("用户名") == -1
+					&& !"".equals(readAllExcel.get(i)[0].toString().trim())
+					&& readAllExcel.get(i)[0].toString().indexOf("例：") == -1) {
+				CUser pojo = new CUser();
+				String yhm = readAllExcel.get(i)[0].toString();
+				BigDecimal bd = new BigDecimal(yhm);
+				yhm = bd.toPlainString();
+				String id = "";
+				int flag = cUserMapper.findUsername(yhm, id);
+				if (flag > 0) {
+					xx = yhm;
+					return xx;
+				}
+				String zsxm = readAllExcel.get(i)[1].toString();
+				String bm = readAllExcel.get(i)[4].toString();
+				String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+				pojo.setId(uuid);
+				pojo.setUsername(yhm);
+				pojo.setRealname(zsxm);
+				pojo.setState("T");
+				pojo.setDept("0");
+				Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(),
+						"yyyy-MM-dd HH:mm:ss");
+				pojo.setAddTime(dateTime);
+				pojo.setLastTime(dateTime);
+				UserRealm r = new UserRealm();
+				String md5 = r.md5(MD5.MD5("123456" + pojo.getUsername()), pojo.getUsername());
+				pojo.setPassword(md5);
+//				System.out.println("id="+uuid+";subject="+zslxs[1]+";qtype="+tmlxs[1]+";content="+obj[0].toString());
+				cUserMapper.insertSelective(pojo);
+				SysDepartmentUser record = new SysDepartmentUser();
+				record.setDepartmentId(bm.split("-")[1]);
+				record.setUserId(pojo.getId());
+				sysDepartmentUserMapper.insertSelective(record);
+				SysUserRoleKey surk = new SysUserRoleKey();
+				surk.setUserId(pojo.getId());
+				surk.setRoleId("0f3f5d863a4111e997d900163e035f23");
+				sysUserRoleMapper.insert(surk);
+			}
+		}
+		return xx;
+		/*
+		 * readAllExcel.stream().forEach(obj -> { String xx=""; //
+		 * System.out.println("==========="+obj[0].toString().indexOf("题目详情（正文）"));
+		 * if(obj!=null&&obj[0]!=null&&obj[0].toString().indexOf("用户名")==-1&&!"".equals(
+		 * obj[0].toString().trim())&&obj[0].toString().indexOf("例：")==-1) { CUser pojo=
+		 * new CUser(); String yhm=obj[0].toString(); BigDecimal bd = new
+		 * BigDecimal(yhm); yhm=bd.toPlainString(); String id=""; int flag =
+		 * cUserMapper.findUsername(yhm, id); if(flag > 0) { xx="用户名重复"+yhm+"！！！";
+		 * return; } String zsxm=obj[1].toString(); String bm=obj[4].toString(); String
+		 * uuid = UUID.randomUUID().toString().replaceAll("-", ""); pojo.setId(uuid);
+		 * pojo.setUsername(yhm); pojo.setRealname(zsxm); pojo.setState("T");
+		 * pojo.setDept("0"); Date dateTime =
+		 * DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(),
+		 * "yyyy-MM-dd HH:mm:ss"); pojo.setAddTime(dateTime);
+		 * pojo.setLastTime(dateTime); UserRealm r = new UserRealm(); String md5 =
+		 * r.md5(MD5.MD5("123456"+pojo.getUsername()), pojo.getUsername());
+		 * pojo.setPassword(md5); //
+		 * System.out.println("id="+uuid+";subject="+zslxs[1]+";qtype="+tmlxs[1]+
+		 * ";content="+obj[0].toString()); cUserMapper.insertSelective(pojo);
+		 * SysDepartmentUser record = new SysDepartmentUser();
+		 * record.setDepartmentId(bm.split("-")[1]); record.setUserId(pojo.getId());
+		 * sysDepartmentUserMapper.insertSelective(record); SysUserRoleKey surk = new
+		 * SysUserRoleKey(); surk.setUserId(pojo.getId());
+		 * surk.setRoleId("0f3f5d863a4111e997d900163e035f23");
+		 * sysUserRoleMapper.insert(surk); } });
+		 */
+
+	}
+}

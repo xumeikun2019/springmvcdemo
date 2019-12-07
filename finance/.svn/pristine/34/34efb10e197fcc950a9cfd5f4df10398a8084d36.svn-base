@@ -1,0 +1,16 @@
+package com.cf.project.service;
+
+import com.cf.util.JsonResult;
+
+public interface WxRequestService {
+	
+
+	Boolean sign(String user, String pwd, String openid) throws Exception;
+
+	JsonResult findVisitByName(String user);
+
+	JsonResult updateVisitorStateById(String id, String state);
+
+//	JsonResult updateVisitorStateFalseById(String id); 
+
+}

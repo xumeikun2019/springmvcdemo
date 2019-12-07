@@ -1,0 +1,66 @@
+package com.cf.project.controller;
+
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.project.service.CMeetingOrderService;
+import com.cf.project.Constants;
+import com.cf.project.controller.GridController;
+import com.cf.util.EntyPage;
+import com.cf.util.GridJsonResult;
+import com.cf.util.JsonResult;
+import com.cf.util.SessionUtil;
+
+import java.util.List;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/main/meetingOrder")
+public class CMeetingOrderController extends GridController {
+    @Autowired
+    private CMeetingOrderService cMeetingOrderService;
+
+    @SuppressWarnings("unchecked")
+    @ResponseBody
+    @RequestMapping("/list")
+    public GridJsonResult listJson(@RequestParam Map<String, Object> map, EntyPage page) {
+        GridJsonResult result = null;		try {			map.put("page",page);
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			map.put("nameId", usermap.get("id").toString());			List<Map<String,Object>> list = cMeetingOrderService.findCMeetingOrderList(map).getList();			result = new GridJsonResult(page);			result.setData(list);		} catch (Exception e) {			e.printStackTrace();		}		return result;
+    }
+
+    @RequestMapping(value= "/add",method = RequestMethod.GET)
+    public String add(ModelMap model) {
+        return "main/meetingOrder/add";
+    }
+
+    @RequestMapping(value= "/edit",method = RequestMethod.GET)
+    public String edit(String id, ModelMap model) {
+        try {			CMeetingOrder pojo = cMeetingOrderService.findCMeetingOrderListById(id);			model.addAttribute("pojo",pojo);		} catch (Exception e) {			e.printStackTrace();		}		return "main/meetingOrder/edit";
+    }
+    
+    @RequestMapping(value= "/view",method = RequestMethod.GET)
+    public String view(String id, ModelMap model) {
+        try {
+			CMeetingOrder pojo = cMeetingOrderService.findCMeetingOrderListById(id);
+			model.addAttribute("pojo",pojo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "main/meeting/view";
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/save",method = RequestMethod.POST, consumes = "application/json")
+    public JsonResult create(@RequestBody CMeetingOrder pojo) {
+        JsonResult result = new JsonResult();		try {			 result = cMeetingOrderService.saveOrUpdate(pojo);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+
+    @ResponseBody
+    @RequestMapping(value= "/del",method = RequestMethod.POST)
+    public JsonResult del(String id) {
+        JsonResult result = new JsonResult();		try {			 result = cMeetingOrderService.del(id);		} catch (Exception e) {			result.setResult(Constants.OPERATION_FAIL);			e.printStackTrace();		}		return result;
+    }
+}

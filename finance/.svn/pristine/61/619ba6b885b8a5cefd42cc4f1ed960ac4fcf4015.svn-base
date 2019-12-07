@@ -1,0 +1,64 @@
+package com.cf.project.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.cf.project.mybatis.model.CDevice;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+public interface CDeviceService {
+    JsonListResult findCDeviceList(Map<String, Object> map) throws Exception;
+
+    CDevice findCDeviceListById(String id) throws Exception;
+
+    JsonResult saveOrUpdate(CDevice pojo) throws Exception;
+    
+    /**
+     * 修改设备在线状态
+     * @param paramMap
+     * @return
+     * @throws Exception
+     */
+    JsonResult updateOnlineState(Map<String,Object> paramMap) throws Exception;
+    
+    /**
+     *      修改设备在线状态
+     * @param paramMap
+     * @return
+     * @throws Exception
+     */
+    JsonResult updateOnlineStateByIp(Map<String,Object> paramMap) throws Exception;
+
+    JsonResult update(CDevice pojo) throws Exception;
+
+    JsonResult del(String id) throws Exception;
+
+	JsonResult addCDevice(Map<String, Object> map);
+
+	JsonResult findByMac(String mac);
+
+	JsonResult addCDevice(CDevice pojo);
+
+	JsonResult updateCDevice(CDevice pojo);
+
+	JsonResult addDevice(CDevice pojo);
+
+	JsonResult updateDevice(CDevice pojo);
+
+	List<Map<String, Object>> findCDeviceByFloor();
+
+	JsonResult updateByAdvice(Map<String, Object> map);
+
+	JsonResult findSucaiJihuaJiemu(String remoteAddr);
+
+	JsonResult findByDeviceIp(String ip);
+
+
+	List<Map<String, Object>> allList(Map<String, Object> map);
+
+
+	JsonResult updateDeciveByIp(Map<String, Object> map);
+
+
+}

@@ -1,0 +1,14 @@
+{
+    "cmsName": "layui后台管理模版",
+    "version": "v1.0.1",
+    "author": "请叫我马�?",
+    "homePage": "page/index.html",
+    "server": "windows",
+    "dataBase": "8.00.2039",
+    "maxUpload": "2M",
+    "userRights": "总管理员",
+    "description": "这是马哥闲来无事做的�?套基于layui的cms模版，纯静�?�页面，不包含数据库",
+    "powerby": "copyright @2017 请叫我马�?",
+    "record": "京ICP�?14040xxx�?-1",
+    "keywords": "layui，马哥，cms，模�?"
+}

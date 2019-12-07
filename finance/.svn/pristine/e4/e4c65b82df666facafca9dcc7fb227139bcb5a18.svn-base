@@ -1,0 +1,56 @@
+package com.cf.project.mybatis.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+public interface WxRequestMapper {
+	/**
+	 * 根据小程序登录用户 查询访客申请信息
+	 * @param user
+	 * @return
+	 */
+	@Select("select  *,date_format(a.add_time,'%Y-%m-%d %H:%i:%s') apply_time from c_visitor a ,c_user  b where a.user_id = b.id and b.username = #{user} and a.state = 'E' order by apply_time  ")
+	List<Map<String, Object>> findVisitByName(String user);
+	/**
+	 * 查询访客明细信息
+	 * @param vid
+	 * @return
+	 */
+	@Select("select *  from c_visitor_user  where visitor_id = #{vid}")
+	List<Map<String, Object>> findVisitUserByName(String vid);
+	
+	
+	/**
+	 * 审核
+	 * @param id 主键
+	 * @return
+	 */
+	@Update("update c_visitor set state = #{state,jdbcType=VARCHAR} WHERE ID = #{id}")
+	int updateVisitorStateById(@Param("id")String id, @Param("state")String state);
+	
+	/**
+	 * 查询打卡记录
+	 * @param uid 用户名
+	 * @param date 查询月份
+	 * @return
+	 */
+	//@Select("select DATE_FORMAT(add_time,'%Y-%m-%d') date,'true' isSign from c_attendance_record where add_time like #{date} and type = '正常' and user_id = #{uid} group by date")
+	@Select("select  DATE_FORMAT(sign_time,'%Y-%m-%d') date ,case type when '正常' then 'true' when '迟到' then 'late' end isSign from c_attendance_record where sign_time like #{date} and user_id = #{uid} ")
+	List<Map<String, Object>> findCheckRecordByUidAndDate(@Param("uid")String uid, @Param("date")String date);
+	
+	
+	@Select("select feature from c_user where wechat_id = #{openid}")
+	List<Map<String, Object>> findFaceImg(String openid);   
+	
+//	/**
+//	 * 审核不通过
+//	 * @param id 主键
+//	 * @return
+//	 */
+//	@Update("update c_visitor set state = 'N' WHERE ID = #{id}")
+//	int updateVisitorStateFalseById(String id); 
+}

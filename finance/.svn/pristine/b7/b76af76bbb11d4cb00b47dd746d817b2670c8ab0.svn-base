@@ -1,0 +1,20 @@
+package com.cf.project.service.jihua;
+
+import com.cf.project.mybatis.model.CJihua;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import java.util.Map;
+
+public interface CJihuaService {
+	/*
+	 * JsonListResult findCJihuaList(Map<String, Object> map) throws Exception;
+	 * 
+	 * CJihua findCJihuaListById(String id) throws Exception;
+	 * 
+	 * JsonResult saveOrUpdate(CJihua pojo) throws Exception;
+	 * 
+	 * JsonResult update(CJihua pojo) throws Exception;
+	 * 
+	 * JsonResult del(String id) throws Exception;
+	 */
+}

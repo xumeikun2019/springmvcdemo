@@ -1,0 +1,103 @@
+package com.cf.project.service.impl;
+
+import com.cf.project.mybatis.dao.CMeetingOrderMapper;
+import com.cf.project.mybatis.dao.CMeetingUserMapper;
+import com.cf.project.mybatis.model.CMeetingOrder;
+import com.cf.project.mybatis.model.CMeetingUser;
+import com.cf.project.service.CMeetingOrderService;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.cf.project.Constants;
+import com.cf.project.annotation.Cache;
+import com.cf.project.annotation.CacheClear;
+import com.cf.util.DateTimeUtil;
+import com.cf.util.EntyPage;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+import com.cf.project.mybatis.model.SysDepartmentUser;
+import com.cf.util.JsonTreeResult;
+import com.cf.util.SessionUtil;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CMeetingOrderServiceImpl implements CMeetingOrderService {
+    @Autowired
+    private CMeetingOrderMapper cMeetingOrderMapper;
+    @Autowired
+    private CMeetingUserMapper cMeetingUserMapper;
+
+    @Cache
+    public JsonListResult findCMeetingOrderList(Map<String, Object> map) throws Exception {
+    	
+    	List<Map<String,Object>> qxlist = cMeetingOrderMapper.findqx(map.get("nameId").toString());
+    	
+    	List<Map<String,Object>> list=new ArrayList<Map<String,Object>>();
+    	if(qxlist.size()>0) {
+    		if(qxlist.get(0).get("role_id").equals("6178ed4bee1e11e9833900e081bbbd32")) {//登陆人员为部门管理员--对自己部门下的会议室申请进行审批    			
+    			list = cMeetingOrderMapper.findByHDPagebm(map);
+        	}else if(qxlist.get(0).get("role_id").equals("758e47ccee1e11e9833900e081bbbd32")) {//登陆人员为会服人员(会议室管理员)--对所有经过部门管理员审批通过的会议室申请进行审批
+        		list = cMeetingOrderMapper.findByHDPagehf(map);
+        	}
+    	}else {//其他人员只能查询自己的审批记录
+    		list = cMeetingOrderMapper.findByHDPage(map);
+    	}   	   			EntyPage page = (EntyPage) map.get("page");		JsonListResult jsonResult = new JsonListResult(page,list);		return jsonResult;
+    }
+
+    @Cache
+    public CMeetingOrder findCMeetingOrderListById(String id) throws Exception {
+        return this.cMeetingOrderMapper.selectByPrimaryKey(id);
+    }
+
+    @CacheClear
+    public JsonResult saveOrUpdate(CMeetingOrder pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();		if (pojo != null) {			String id = pojo.getId();			int result = 0;
+			pojo.setOrderPlaceId(pojo.getOrderPlaceId().substring(0, pojo.getOrderPlaceId().length()-1));
+			Map<String, Object> usermap = (Map<String, Object>) SessionUtil.getSessionAttr("user");
+			pojo.setOrderUserId(usermap.get("id").toString());
+			//判断预约时间是否冲突
+			List<Map<String,Object>> list = cMeetingOrderMapper.findtime(pojo.getTimeEnd(),pojo.getTimeStart(),pojo.getOrderPlaceId());
+			if(list.size()>0) {
+				jsonResult.setResult(Constants.OPERATION_FAIL);
+				jsonResult.setMessage("预约时间和"+list.get(0).get("meeting_name")+"有冲突!");
+				return jsonResult;
+			}			Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");			if (StringUtils.isNotBlank(id)) {				pojo.setLastTime(dateTime);				result = cMeetingOrderMapper.updateByPrimaryKeySelective(pojo);			} else {
+				String uuid = UUID.randomUUID().toString().replaceAll("-", "");				pojo.setAddTime(dateTime);				pojo.setLastTime(dateTime);				
+				pojo.setOrderDeptId(pojo.getOrderDeptId().substring(0, pojo.getOrderDeptId().length()-1));
+				if(pojo.getAuditType().equals("auto")) {
+					pojo.setMeetingStep("3");
+				}else {
+					pojo.setMeetingStep("1");
+				}				
+				pojo.setId(uuid);				
+				String[] participant=pojo.getState().split(",");
+				for(int i=0;i<participant.length;i++) {
+					CMeetingUser pojo1=new CMeetingUser();
+					pojo1.setMeeting(uuid);
+					pojo1.setUser(participant[i]);
+					cMeetingUserMapper.insertSelective(pojo1);
+				}
+				pojo.setState("T");				result = cMeetingOrderMapper.insertSelective(pojo);
+				if(pojo.getAuditType().equals("auto")) {//自动审核，开始推送
+					
+				}			}			if (result == 0) {				jsonResult.setResult(Constants.OPERATION_FAIL);			}		}		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult update(CMeetingOrder pojo) throws Exception {
+        JsonResult jsonResult = new JsonResult();		Date dateTime = DateTimeUtil.getFormatDateTime(DateTimeUtil.getCurrDateTimeStr(), "yyyy-MM-dd HH:mm:ss");		pojo.setLastTime(dateTime);		int result = cMeetingOrderMapper.updateByPrimaryKeySelective(pojo);		if (result == 0) {			jsonResult.setResult(Constants.OPERATION_FAIL);		}		return jsonResult;
+    }
+
+    @CacheClear
+    public JsonResult del(String id) throws Exception {
+        JsonResult jsonResult = new JsonResult();		int result = 0;		if (StringUtils.contains(id,",")) {			String[] idsArr = id.split(",");			if (idsArr.length > 0) {				for (String idArr : idsArr) {					result = cMeetingOrderMapper.deleteByPrimaryKey(idArr);					if (result == 0) {						break;					}				}			}		} else {			result = cMeetingOrderMapper.deleteByPrimaryKey(id);		}		if (result == 0) {			jsonResult.setResult(Constants.OPERATION_FAIL);		}		return jsonResult;
+    }
+}

@@ -1,0 +1,405 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+    pageEncoding="utf-8"%>
+    <%
+    String path = request.getContextPath();
+    String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+
+
+%>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>菜单管理</title>
+	<%@ include file="/common/taglibs.jsp"%>
+    <%@ include file="/common/table.jsp"%>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet"  href="${ctx}/statics/css/common.css" />
+    <link rel="stylesheet"  href="${ctx}/statics/css/metroStyle/metroStyle.css" />
+    <%-- <link rel="stylesheet"  href="${ctx}/statics/css/eleTree.css" /> --%>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.table.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.core.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.excheck.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.exedit.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.form.min.js"></script>
+    
+    <style type="text/css">
+    body,html {margin:0; height:100%;}
+	.mainDiv{height:100%; background:#eee;width:100%;}
+        .aaa{box-shadow:0 0 5px green;width:95%;height:95%;margin:5px; }
+        
+        #weather {
+		    background-color: #F5F8FC;
+		    height: 100%;
+		    width: 100%;
+		    overflow: hidden;
+		    font-family: 'Open Sans', sans-serif;
+		}
+    </style>
+    
+    <script type="text/javascript">
+    
+        
+	
+    </script>
+</head>
+<body >
+<input type="hidden" value="<%=basePath %>"  id="basePath">
+<input type="hidden" id="userName" value="${user.username}"> <!-- 当前用户 -->
+	<div class="mainDiv" >
+		<table style="width:100%;height: 100%;" border="0">
+			
+			<tr>
+				<td width="20%;" style="background-color: white;" valign="top">
+					<div style="heigth:100%">
+						<table id="leftTable" style="width:100%;height: 10%; padding-top: 0px;" >
+							<tr id="left_title">
+								<td align="center" >
+								 <a style="margin: 10px;" class='layui-btn layui-btn-small _aa' onclick="openSC()">添加素材</a>
+								</td>
+							</tr>					
+											
+						</table>
+					</div>
+				</td>
+				<td width="60%;" align="center">
+					<table style="width:100%;height: 100%;">
+						
+						<tr><td align="center">
+							<div id="mainArea" style="width: 98%;height: 98%;background-color: white;">
+							<input type="hidden" id="viewPath" value=""> 
+								<table style="width:100%;height: 100%; padding-top: 0px;" border="1" >
+									<!-- <tr height="20%">
+										<td align="center" width="50%">
+										 <div id="dateArea"></div>
+										</td>
+										<td align="center"  width="50%">
+										 <div id="weather"></div>
+										</td>
+									</tr> -->					
+									<tr>
+										<td align="center" colspan="2" id="videoArea">
+										  视频
+										</td>
+									</tr>					
+									<!-- <tr height="5%">
+										<td align="center" colspan="2">
+										  消息
+										</td>
+									</tr> -->					
+								</table>
+							</div>
+						</td></tr>
+						
+					</table>
+				
+					
+				</td>
+				<!-- <td width="20%;" style="background-color: white;" >
+					<table style="width:100%;height: 100%; padding-top: 0px;" >
+						<tr><td align="center">播放周期</td></tr>
+						<tr><td align="center">
+							<input type="checkbox" name="" checked="">星期一&nbsp;
+							<input type="checkbox" name="" checked="">星期二&nbsp;
+							<input type="checkbox" name="" checked="">星期三&nbsp;
+						</td></tr>
+						<tr><td align="center">
+							<input type="checkbox" name="" checked="">星期四&nbsp;
+							<input type="checkbox" name="" checked="">星期五&nbsp;
+							<input type="checkbox" name="" checked="">星期六&nbsp;
+						</td></tr>
+						<tr><td align="center">
+							<input type="checkbox" name="" checked="">星期天
+							<hr>
+						</td></tr>
+						
+						<tr><td align="center">
+							播放间隔<input type="text">秒
+							
+						</td></tr>
+						
+						<tr><td align="center">
+						<hr>
+						播放时段</td></tr>
+						<tr><td rowspan="3" align="center">
+							<input type="text"><br><br>
+							至<br><br>
+							<input type="text">
+						</td></tr>
+					</table>
+				</td> -->
+				<td width="20%;" style="background-color: white;" >
+					<table style="width:100%;height: 100%; padding-top: 0px;" >
+						<tr><td align="center">添加内容</td></tr>
+						<tr><td align="center">
+							<input type="checkbox" name="vcon" checked="">时间&nbsp;
+							<input type="checkbox" name="vcon" checked="">天气&nbsp;
+						</td></tr>
+						
+						<tr><td align="center">
+							轮播间隔<input id="jg" type="text" value="5">秒
+							
+						</td></tr>
+						<tr><td align="center">
+							节目名称<input id="jmName" type="text" >
+							
+						</td></tr>
+						
+						<tr><td align="center">
+							<a class='layui-btn layui-btn-danger' onclick="saveJM()">节目保存</a>
+							&nbsp;&nbsp;&nbsp;
+						<a class='layui-btn layui-btn-danger' onclick="preview()">效果预览</a>
+						</td></tr>
+						<tr><td align="center">
+							<a class='layui-btn layui-btn-danger' onclick="nextStep()" id="cjjh">创建计划>></a>
+						</td></tr>
+					</table>
+				</td>
+			</tr>
+			
+		</table>
+	</div>
+   <script type="text/javascript" src="${ctx}/statics/plugins/layui/layui.js"></script>
+   <script type="text/javascript" src="${ctx}/statics/js/common.js"></script>
+   <script type="text/javascript" src="${ctx}/statics/js/createtab.js" path="${ctx}" id="createTab"></script>
+  <script type="text/javascript">
+  
+  layui.use(['form','jquery'], function(){
+      var form = layui.form
+          ,layer = layui.layer,
+          eleTree = layui.eleTree,
+          $ = layui.jquery;
+
+
+      //自定义验证规则
+      form.verify({
+          categroy: function(value){
+              if(value.length < 5){
+                  return '标题至少得5个字符啊';
+              }
+          }
+      });
+  });
+
+  
+  
+  function openSC(){
+		  
+        //  var classVideo = document.getElementById("videourl").value;
+          var index = layer.open({
+        	  id: 'insert-form',
+              type: 2,
+              content: '${ctx}/jiemu/scpage.do',
+              area: ['90%', '90%'],
+              offset:'t',
+              btn: ['提交','取消'],
+              maxmin: true,
+              yes: function (index,layero) {
+            	  var body = layer.getChildFrame('body', index);
+                  var iframeWin = window[layero.find('iframe')[0]['name']];//得到iframe页的窗口对象，执行iframe页的方法：
+                  var checkboxArr = iframeWin.submitCkeck();//调用子页面的方法，得到子页面返回的ids
+                  
+                  putCkeck(checkboxArr);
+                  layer.close(index);//需要手动关闭窗口
+              } ,
+              end: function () {
+              }
+          });
+	} 
+  function putCkeck(arr){
+	  
+	  var html = "";
+	  for(var i=0;i<arr.length;i++){
+		  var o = arr[i].split(',');
+		  
+			html+='<tr><td align="center">';
+			
+			
+			
+		  	html+='  <div class="layui-card aaa" style="height: 12vw;">';
+		  	html+='     <div style="height: 1.5vw;"  align="center" >';
+  			html+='    </div>';
+			html+='  	<div  style="height: 7vw;">';
+			html+='         <a href="javaScript:void(0);" onclick="putVideo(\''+o[2]+'\');" >';
+			html+='         	<video  src="'+o[2]+'" style="width:70%;height:95%;object-fit:fill;"></video>';
+			html+='				<input type="hidden" value="'+o[2]+'" name="vvv">'
+			html+='				<input type="hidden" value="'+o[0]+'" name="vid">'
+		    html+='         </a>';
+		    html+='    </div>';
+		    html+='     <div style="height: 1.5vw;"  align="center" >';
+  		    html+='        		<p id="name" align="center">'+o[1]+'</p>'; 
+  			html+='    </div>';
+  			html+='    <div style="height: 1.5vw;">';
+  			//if(i>0){
+  				//layui-icon-upload-circle
+	  			html+='            		 <a href="javaScript:void(0);" onclick="up(this);" >';
+	  			html+='                		<font color="green" size="2">向上</font>';
+	  			html+='             	 </a>';
+  			//}
+  			//layui-icon-delete
+  			html+='            		 &nbsp;&nbsp;&nbsp;<a href="javaScript:void(0);" onclick="remove(this);" >';
+  			html+='                		<font color="red" size="2">移除</font>';
+  			html+='             	 </a>';
+  			html+='    </div>';
+			html+='   </div>';
+		
+			html+='</td></tr>';
+	  }
+	  $('#leftTable').append(html);
+  }
+  
+  function putVideo(path){
+	  $('#viewPath').val(path);
+	  var basePath = $('#basePath').val();
+	  var html = "";
+	  html+='<video   preload="auto" controls   src="'+basePath+path+'" style="width:100%;height:100%;object-fit:fill;">';
+	  html+='<source src="'+path+'" type="video/mp4"></video>';
+	  $('#videoArea').html(html);
+  }
+  
+  function preview(){
+	  var vvv = "";
+	  $('input[name="vvv"]').each(function(){
+		  vvv+=$(this).val()+",";
+	  });
+	  console.log("vvv::"+vvv);
+	          var index = layer.open({
+	              type: 2,
+	              content: '${ctx}/jiemu/preview.do?path='+$('#viewPath').val()
+	            		  								  +"&jg="+$('#jg').val()
+	            		  								  +"&vvv="+vvv,
+	              area: ['70%', '90%'],
+	              offset:'t',
+	              maxmin: true,
+	              end: function () {
+	  
+	              }
+	          });
+
+  }
+  
+ 
+  
+  ///--------------------------
+  function remove(obj){
+	  var tr = $(obj).parent().parent().parent().parent();
+	  tr.remove();
+  }
+  function up(obj){
+	  var tr = $(obj).parent().parent().parent().parent();
+	  /* console.log(tr.prev()[0].tagName);
+	  if(tr.prev()[0].tagName=="TR"){
+		  
+	  } */
+	  if(tr.prev().attr('id')=="left_title"){
+		  alert("已经是第一行！");
+		  return;
+	  }
+	  $(tr.prev()).before(tr);
+	  
+  }
+  function saveJM(){
+	  var vids = "";
+	  $('input[name="vid"]').each(function(){
+		  vids+=$(this).val()+",";
+	  });
+	  var paths = "";
+	  $('input[name="vvv"]').each(function(){
+		  paths+=$(this).val()+",";
+	  });
+	  $.ajax({
+			url : "${ctx}/jiemu/saveJM.do",
+			type : "post",
+			dataType : "json",
+			data : {
+				'vIds':vids,
+				'paths':paths,
+				'jg':$('#jg').val(),
+				'userName': $('#userName').val(),
+				'jmName':$('#jmName').val()
+			},
+			success : function(result) {
+				console.log(result);
+				if(result.result=="ok"){
+					alert("节目保存成功");
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				alert("出现错误！");
+			}
+		});
+  }
+  
+  function nextStep(){
+		  //跳转设置节目计划
+		   var vids = "";
+			  $('input[name="vid"]').each(function(){
+				  vids+=$(this).val()+",";
+			  });
+			  var paths = "";
+			  $('input[name="vvv"]').each(function(){
+				  paths+=$(this).val()+",";
+			  });
+	          var index = layer.open({
+	        	  id: 'insert-form',
+	              type: 2,
+	              content: '${ctx}/jiemu/setJM.do',
+	              area: ['70%', '100%'],
+	              offset:'t',
+	              btn: ['提交','取消'],
+	              maxmin: true,
+	              success: function (layero, index) {
+	            	// parent.$(".layui-layer-title")[0].innerText = '设置节目计划';
+	              },
+	              yes: function (index,layero) {
+	            	  var body = layer.getChildFrame('body', index);
+	                  var iframeWin = window[layero.find('iframe')[0]['name']];//得到iframe页的窗口对象，执行iframe页的方法：
+	                  var dates = iframeWin.getDates();//调用子页面的方法，得到子页面返回的ids
+	                  var times = iframeWin.getTimes();//调用子页面的方法，得到子页面返回的ids
+	                  //节目和计划提交 
+	                  
+	                   $.ajax({
+							url : "${ctx}/jiemu/saveJMJH.do",
+							type : "post",
+							dataType : "json",
+							data : {
+								'vIds':vids,
+								'paths':paths,
+								'jg':$('#jg').val(),
+								'userName': $('#userName').val(),
+								'jmName':$('#jmName').val(),
+								'dates':dates,
+								'times':times
+							},
+							success : function(result) {
+								if(result.result=="ok"){
+									alert("节目保存成功");
+								}
+								
+							},
+							error: function (XMLHttpRequest, textStatus, errorThrown) {
+								alert("出现错误！");
+							}
+						});
+	                  
+	                  
+	                  layer.close(index);//需要手动关闭窗口
+	                  
+	                  var parent_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+	                  parent.layer.close(parent_index); //再执行关闭
+	                  window.parent.location.reload();
+	              } ,
+	              end: function () {
+	              }
+	          });
+  }
+	
+    </script>
+
+</body>
+</html>

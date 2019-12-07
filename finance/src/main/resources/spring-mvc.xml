@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd  
+             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd  
+             http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd              
+             http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+			 http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd"
+     default-autowire="byName" default-lazy-init="false">
+
+	<!-- AUTO SCAN -->
+	<context:component-scan base-package="com.cf.project.*">
+	   <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />  
+	   <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service" />  
+	</context:component-scan>
+	
+	<bean id="stringHttpMessageConverter" class="org.springframework.http.converter.StringHttpMessageConverter">
+        <property name="supportedMediaTypes">
+            <list>
+                <value>text/html; charset=utf-8</value>
+                <value>application/json;charset=UTF-8</value>
+                <value>text/json</value>
+            </list>
+        </property>
+    </bean>
+	
+	<!-- IEJSONNOTDDOWNLOAD -->
+	 <bean id="mappingJacksonHttpMessageConverter"
+		class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+		<property name="supportedMediaTypes">
+			<list>
+				<value>text/html;charset=UTF-8</value>
+				<value>application/json;charset=UTF-8</value>
+				<value>text/json</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<property name="cacheSeconds" value="0" />
+		<property name="messageConverters">
+			<list>
+				<ref bean="stringHttpMessageConverter" />
+				<ref bean="mappingJacksonHttpMessageConverter" /><!-- json转换器 -->
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 默认 -->
+	<bean id="defaultViewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="contentType" value="text/html" />
+		<property name="prefix">
+			<value>/WEB-INF/page/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver"
+		p:defaultEncoding="UTF-8">
+		<property name="maxUploadSize">
+			<value>104857600000</value>
+		</property>
+		<property name="maxInMemorySize">
+			<value>4096</value>
+		</property>
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+
+	<bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+
+	<!-- 系统错误转发配置[并记录错误日志] -->
+	<bean
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="500"></property>
+		<property name="defaultStatusCode" value="404"></property>
+		<property name="statusCodes">
+			<props>
+				<prop key="index">500</prop>
+				<prop key="index">404</prop>
+			</props>
+		</property>
+		<property name="exceptionMappings">
+			<props>
+				<!-- 定义N多个错误异常转发 -->
+				<prop key="java.sql.SQLException">exc/sql</prop>
+				<prop key="org.springframework.web.bind.ServletRequestBindingException">exc/sReqBind</prop>
+				<prop key="java.lang.IllegalArgumentException">exc/illegalArg</prop>
+				<prop key="org.springframework.validation.BindException">exc/valBind</prop>
+				<prop key="java.lang.Exception">exc/lang</prop>
+			</props>
+		</property>
+	</bean>
+
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+
+	<mvc:annotation-driven/>
+
+	<!-- 拦截器 -->
+	 <mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean class="com.cf.project.interceptor.EncodingInterceptor" />
+		</mvc:interceptor>
+		
+		<mvc:interceptor>
+			<mvc:mapping path="/app/**"/>
+			<bean class="com.cf.project.interceptor.APIInterceptor" />
+		</mvc:interceptor>
+		
+		<!-- <mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<mvc:exclude-mapping path="/manage/isLogin.html" />
+			<mvc:exclude-mapping path="/manage/login.html" />
+			<mvc:exclude-mapping path="/mainCode/code.html" />
+			<bean class="com.fangyuan.emianbao.interceptor.SecurityInterceptor"></bean>
+		</mvc:interceptor> -->
+	</mvc:interceptors> 
+</beans>  

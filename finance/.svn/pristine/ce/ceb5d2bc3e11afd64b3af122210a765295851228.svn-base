@@ -1,0 +1,147 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+    pageEncoding="utf-8"%>
+    <%
+    String path = request.getContextPath();
+    String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort();
+
+
+%>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>菜单管理</title>
+	<%@ include file="/common/taglibs.jsp"%>
+    <%@ include file="/common/table.jsp"%>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet"  href="${ctx}/statics/css/common.css" />
+    <link rel="stylesheet"  href="${ctx}/statics/css/metroStyle/metroStyle.css" />
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.table.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.core.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.excheck.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.ztree.exedit.min.js"></script>
+    <script type="text/javascript" src="${ctx}/statics/js/jquery.form.min.js"></script>
+     <script type="text/javascript" src="${ctx}/statics/plugins/layui/layui.js"></script>
+   <script type="text/javascript" src="${ctx}/statics/js/common.js"></script>
+   <script type="text/javascript" src="${ctx}/statics/js/createtab.js" path="${ctx}" id="createTab"></script>
+   <script type="text/javascript" src="https://apip.weatherdt.com/float/static/js/r.js?v=1111"></script>
+      <style type="text/css">
+    body,html {margin:0; height:100%;}
+	#box{height:100%; background:#eee;width:100%;}
+	
+	
+.wenzi{
+    position: relative;
+    float: left;
+    top: 30px;
+    color: white;
+    width: 100%;
+    height: 30px;
+    text-align: center;
+    z-index:1;
+}
+    </style>
+</head>
+
+<body>
+
+    <!--这里写页面的代码-->
+    <div id="box" >
+    	<table style="width:100%;height: 100%; padding-top: 0px;" border="1" >
+								
+			<tr>
+				<td align="center" colspan="2" id="videoArea">
+				<div class="wenzi" id="wenzi">
+					<table>
+						<tr>
+							<td><p id="time" style="float:left;"></p></td>
+							<td><iframe width="300" scrolling="no" height="25" frameborder="0" allowtransparency="true" src="//i.tianqi.com/index.php?c=code&id=10&color=%23FFFFFF&icon=1&py=zibo&site=12"></iframe></td>
+						</tr>
+					</table>
+ 				</div>
+				
+				  <video id="video"  preload="auto" autoplay="autoplay" style="width:100%;height:100%;object-fit:fill;">
+		            <source id="vs" src="" type="video/mp4">
+		        </video> 
+				</td>
+			</tr>					
+			<tr height="5%">
+				<td align="center" colspan="2">
+				  消息
+				</td>
+			</tr>					
+		</table>
+         <input type="hidden" value="<%=basePath %>" id="basePath"> 
+         <input type="hidden" value="${jg}" id="jg" >  
+         <input type="hidden" value="${vvv}" id="vvv" > 
+    </div>
+
+<script>
+
+	
+var j=0;
+	function timer(){
+		//切换视频
+		var vvv = $('#vvv').val();
+		var va = vvv.split(',');
+		if(j>va.length-2){
+			j=0;
+			
+		}
+		for(var i=0;i<va.length-1;i++){
+			if(i==j){
+				var path = $('#basePath').val()+va[i];
+				
+				console.log("path:::"+path);
+				document.getElementById("video").src = path;
+			}
+		}
+		j++;
+	}
+	timer();
+	//重复执行某个方法 
+	setInterval(timer,$('#jg').val()*1000); 
+	//去掉定时器的方法 
+	//window.clearInterval(t1); 
+	
+	 function showtime(){
+		 var date=new Date();
+		var year=date.getFullYear();
+		var month=date.getMonth()+1;
+		var day=date.getDay();
+		var hours=date.getHours();
+		var minutes=date.getMinutes();
+		var seconds=date.getSeconds();
+        
+        if(day<10){
+		day="0"+day;
+		}
+        if(seconds<10){
+		seconds="0"+seconds;
+		}
+		if (minutes<10) {
+		minutes="0"+minutes;
+		}
+		if (hours<10) {
+		hours="0"+hours;
+		}
+		var time=year+"-"+month+"-"+day+" "+hours+":"+minutes+":"+seconds;
+		var o=document.getElementById("time");
+	    o.innerHTML=time;
+	    setTimeout(showtime,1000)
+	   }
+	 showtime();
+	
+	 <!-- zibo -->
+	 WIDGET = {FID: '33iRtveyfc'}
+	 
+</script>
+
+</body>
+
+</html>

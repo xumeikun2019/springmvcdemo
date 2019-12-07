@@ -1,0 +1,37 @@
+package com.cf.project.service;
+
+import java.util.Map;
+
+import com.cf.project.mybatis.model.CUser;
+import com.cf.util.JsonListResult;
+import com.cf.util.JsonResult;
+
+public interface CUserService {
+
+	
+	JsonListResult findCUserList(Map<String, Object> map) throws Exception;
+
+    CUser findCUserListById(String id) throws Exception;
+
+    JsonResult saveOrUpdate(CUser pojo) throws Exception;
+
+    JsonResult update(CUser pojo) throws Exception;
+
+    JsonResult del(String id) throws Exception;
+    
+    //重置密码
+    JsonResult updatePwd(String id,String username) throws Exception;
+    
+    JsonResult updateState(String id) throws Exception;
+
+	JsonListResult findCUserListsh(Map<String, Object> map) throws Exception;
+
+	String findCUserIdByName(String user) throws Exception;
+
+	JsonListResult findCUserListByOpenId(String openId) throws Exception; 
+
+	JsonResult selectByUser(String username, String password);
+
+	JsonResult delWechatId(String openId) throws Exception; 
+
+}
