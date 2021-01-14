@@ -37,7 +37,7 @@
 	  <commons-httpclient.version>3.1</commons-httpclient.version>
 	  <json.version>20090211</json.version>
 	  <json.lib.version>2.4</json.lib.version>
-	  <poi.version>3.9</poi.version>
+	  <poi.version>4.1.2</poi.version>
 	  
   </properties>
   
